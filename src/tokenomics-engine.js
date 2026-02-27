@@ -1,4 +1,4 @@
-﻿class TokenomicsEngine {
+class TokenomicsEngine {
     constructor(symbol, maxSupply) {
         this.symbol = symbol;
         this.maxSupply = maxSupply;
@@ -6,16 +6,16 @@
         this.vaultBalance = 0;
     }
 
-    // بدلاً من الحرق، الرسوم 2.5% تذهب للخزينة لرفع القيمة
-    collectTax(amount) {
+    processTransaction(amount) {
         const tax = amount * 0.025;
-        this.vaultBalance += tax;
-        this.circulatingSupply -= tax; // تضييق السيولة السوقية
-        return tax;
+        const net = amount - tax;
+        this.vaultBalance += tax; 
+        // سحب الرسوم من التداول لرفع القيمة
+        return { tax, net };
     }
 }
-module.exports = { 
-    Aura: new TokenomicsEngine("AURA", 21000000), 
-    Jewel: new TokenomicsEngine("JEWEL", 21000000) 
 
+module.exports = {
+    AuraEngine: new TokenomicsEngine("AURA", 21000000),
+    JewelEngine: new TokenomicsEngine("JEWEL", 21000000)
 };
