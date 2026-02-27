@@ -1,0 +1,8 @@
+﻿[
+  {
+    "id": "user@example.com",
+    "phone": "+20123456789",
+    "keyHash": "ef92b778ba2211240a70e7303a74313f",
+    "walletAddress": "PUBLIC_KEY_HERE"
+  }
+]

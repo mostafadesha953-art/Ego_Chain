@@ -1,0 +1,29 @@
+﻿<div class="card" style="background: linear-gradient(145deg, #1a1a1a, #000); border: 1px solid #f1c40f;">
+    <h3 style="color: #f1c40f; margin-top: 0;">💎 Market Value & Scarcity Meter</h3>
+    <div style="display: flex; justify-content: space-around; text-align: center;">
+        <div style="flex: 1; border-right: 1px solid #333;">
+            <div style="font-size: 12px; color: #aaa;">AURA Out of Market</div>
+            <div id="aura-locked" style="font-size: 20px; color: #25d366; font-weight: bold;">0.00</div>
+            <div id="aura-boost" style="font-size: 10px; color: #f1c40f;">Value Boost: +0%</div>
+        </div>
+        <div style="flex: 1;">
+            <div style="font-size: 12px; color: #aaa;">JEWEL Out of Market</div>
+            <div id="jewel-locked" style="font-size: 20px; color: #25d366; font-weight: bold;">0.00</div>
+            <div id="jewel-boost" style="font-size: 10px; color: #f1c40f;">Value Boost: +0%</div>
+        </div>
+    </div>
+    <p style="font-size: 10px; color: #666; margin-top: 10px; text-align: center;">
+        *Every transaction (2.5% fee) reduces supply and increases floor price.
+    </p>
+</div>
+
+<script>
+    // تحديث المؤشرات دورياً
+    ipcRenderer.on('update-scarcity', (event, metrics) => {
+        document.getElementById('aura-locked').innerText = metrics.AURA.locked;
+        document.getElementById('aura-boost').innerText = Value Boost: +${metrics.AURA.scarcityBoost};
+        
+        document.getElementById('jewel-locked').innerText = metrics.JEWEL.locked;
+        document.getElementById('jewel-boost').innerText = Value Boost: +${metrics.JEWEL.scarcityBoost};
+    });
+</script>

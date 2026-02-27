@@ -1,0 +1,71 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>EgoChain - User Portal</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: #e0e0e0; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 400px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #333; background: #121212; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-login { background: #007bff; color: white; }
+        .btn-contract { background: #28a745; color: white; margin-top: 20px; }
+        .hidden { display: none; }
+        .trade-key-box { background: #333; padding: 10px; margin-top: 15px; border-left: 4px solid #f39c12; word-break: break-all; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="loginSection">
+    <h2>EgoChain Login</h2>
+    <p style="font-size: 12px; color: #888;">Egypt Compliance: Data logged for CBE Audit</p>
+    <input type="text" id="identifier" placeholder="Email or Phone Number (+20)">
+    <input type="password" id="pass" placeholder="Secret Access Key">
+    <button class="btn-login" onclick="login()">Access My Wallet</button>
+</div>
+
+<div class="container hidden" id="portalSection">
+    <h2>Generate Trade Key</h2>
+    <p>Sign a secure transfer to prevent "Revert".</p>
+    <input type="text" id="buyerPublic" placeholder="Buyer's Public Address">
+    <input type="number" id="amount" placeholder="Amount (EGP)">
+    <button class="btn-contract" onclick="generateTradeKey()">Generate & Sign Contract</button>
+    
+    <div id="output" class="hidden">
+        <p>Share this Key with Buyer:</p>
+        <div class="trade-key-box" id="keyDisplay"></div>
+        <button class="btn-login" style="background:#25d366; margin-top:10px;" onclick="shareWhatsApp()">Share via WhatsApp</button>
+    </div>
+</div>
+
+<script>
+    function login() {
+        const id = document.getElementById('identifier').value;
+        if(id) {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('portalSection').classList.remove('hidden');
+        }
+    }
+
+    function generateTradeKey() {
+        const buyer = document.getElementById('buyerPublic').value;
+        const amount = document.getElementById('amount').value;
+        
+        // محاكاة توقيع العقد الذكي رقمياً
+        const timestamp = Date.now();
+        const rawData = AUTH-${buyer}-${amount}-${timestamp};
+        // في الواقع سنستخدم Wallet.signTransaction من الملفات السابقة
+        const signature = btoa(rawData); // Base64 كمثال للتوقيع الرقمي
+
+        document.getElementById('output').classList.remove('hidden');
+        document.getElementById('keyDisplay').innerText = EGO-AUTH-SIG:${signature};
+    }
+
+    function shareWhatsApp() {
+        const key = document.getElementById('keyDisplay').innerText;
+        const url = https://wa.me, this is my EgoChain Authorized Trade Key: ${key};
+        window.open(url, '_blank');
+    }
+</script>
+</body>
+</html>

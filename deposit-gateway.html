@@ -1,0 +1,30 @@
+﻿<!-- أضف هذا الجزء داخل user-portal.html -->
+<div class="card" style="background: #121212; border: 1px solid #333;">
+    <h3 style="color: #f1c40f;">💳 Wallet Recharge (Deposit)</h3>
+    <p style="font-size: 12px;">To deploy contracts, deposit USDT to your Ego-Address below:</p>
+    
+    <div style="background: #000; padding: 10px; border-radius: 5px; text-align: center;">
+        <code id="depositAddr" style="color: #007bff; font-size: 11px;">EGO_TEMP_DEPOSIT_ADDRESS_0X...</code>
+    </div>
+    
+    <div style="margin-top: 15px; display: flex; justify-content: space-between;">
+        <div>AURA: <span id="aura-bal">0.00</span></div>
+        <div>JEWEL: <span id="jewel-bal">0.00</span></div>
+        <div style="color: #25d366;">USDT: <span id="usdt-bal">0.00</span></div>
+    </div>
+    
+    <button class="btn-contract" style="background: #555;" onclick="refreshBalances()">Check for Deposits</button>
+</div>
+
+<script>
+    function refreshBalances() {
+        // نرسل طلب للشبكة للتأكد من وصول الأموال (Mock Scan)
+        ipcRenderer.send('check-incoming-tx');
+    }
+
+    ipcRenderer.on('balance-updated', (event, balances) => {
+        document.getElementById('aura-bal').innerText = balances.AURA;
+        document.getElementById('jewel-bal').innerText = balances.JEWEL;
+        document.getElementById('usdt-bal').innerText = balances.USDT;
+    });
+</script>

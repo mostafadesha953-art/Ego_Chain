@@ -1,0 +1,34 @@
+﻿<!-- قسم توثيق الهوية داخل user-portal.html -->
+<div class="card" style="border-left: 5px solid #f1c40f; background: #1a1a1a;">
+    <h3 style="color: #f1c40f;">🇪🇬 Digital ID Verification (KYC)</h3>
+    <p style="font-size: 11px; color: #888;">Compliant with Egyptian Cyber Law. Data is encrypted locally.</p>
+    
+    <input type="text" id="fullName" placeholder="Full Name (as in National ID)">
+    <input type="text" id="nationalID" placeholder="National ID Number (14 Digits)">
+    
+    <button class="btn-login" style="background: #f1c40f; color: #000;" onclick="submitKYC()">Verify My Identity</button>
+    
+    <div id="kyc-status" style="margin-top: 10px; font-size: 12px; display: none;">
+        Status: <b style="color: #25d366;">VERIFIED ✓</b><br>
+        <small id="id-hash" style="color: #666; font-size: 9px;"></small>
+    </div>
+</div>
+
+<script>
+    function submitKYC() {
+        const data = {
+            name: document.getElementById('fullName').value,
+            nID: document.getElementById('nationalID').value
+        };
+
+        if(data.nID.length !== 14) return alert("Invalid National ID");
+
+        ipcRenderer.send('verify-identity', data);
+    }
+
+    ipcRenderer.on('identity-confirmed', (event, response) => {
+        document.getElementById('kyc-status').style.display = 'block';
+        document.getElementById('id-hash').innerText = "Digital Fingerprint: " + response.idHash;
+        alert("Identity Linked to Ego-Wallet Successfully.");
+    });
+</script>
