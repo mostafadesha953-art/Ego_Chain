@@ -2,125 +2,59 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>EgoChain Core | Sovereign Digital Ledger</title>
-    <!-- إضافة مكتبة الأيقونات -->
+    <title>EgoChain Core | 21M Edition</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
     <style>
-        :root { --gold: #d4af37; --dark: #0a0b0d; --card: #16181d; --green: #25d366; --danger: #ff4b2b; --hybrid: #7b1fa2; }
+        :root { --gold: #d4af37; --dark: #0a0b0d; --card: #16181d; --green: #25d366; --danger: #ff4b2b; }
         body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; overflow: hidden; }
-        
-        /* Sidebar */
-        .sidebar { width: 260px; background: var(--card); height: 100vh; padding: 20px; border-left: 1px solid #222; display: flex; flex-direction: column; }
-        .logo-box { font-size: 24px; font-weight: bold; color: var(--gold); text-align: center; margin-bottom: 30px; letter-spacing: 2px; }
-        
-        /* Main Content */
+        .sidebar { width: 280px; background: var(--card); height: 100vh; padding: 20px; border-left: 1px solid #222; display: flex; flex-direction: column; }
         .content { flex: 1; padding: 30px; overflow-y: auto; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #222; position: relative; }
-        .stat-val { font-size: 26px; color: var(--gold); font-weight: bold; }
-        
-        /* Forms & Inputs */
+        .card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #222; }
+        .stat-val { font-size: 24px; color: var(--gold); font-weight: bold; }
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
-        textarea { resize: none; font-family: monospace; font-size: 10px; color: var(--green); }
-        
-        .btn-gold { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; transition: 0.3s; font-size: 14px; }
-        .btn-gold:hover { transform: scale(1.02); box-shadow: 0 0 15px rgba(212,175,55,0.3); }
-        
-        /* Specialized UI Components */
-        .tx-item { background: #000; padding: 10px; border-radius: 6px; margin-bottom: 5px; font-size: 12px; border-right: 3px solid var(--gold); }
-        .hybrid-badge { font-size: 9px; background: var(--hybrid); color: white; padding: 2px 6px; border-radius: 4px; margin-right: 5px; }
-        
-        #halt-screen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; color:var(--danger); flex-direction:column; justify-content:center; align-items:center; text-align:center; }
-        
-        .pulse { animation: pulse-red 2s infinite; }
-        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .btn-gold { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 15px; width: 100%; border-radius: 8px; cursor: pointer; }
+        .progress-bg { width: 100%; background: #222; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
+        #supply-bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--gold), var(--green)); transition: 1s; }
     </style>
 </head>
 <body>
-    <!-- شاشة الطوارئ -->
-    <div id="halt-screen">
-        <i class="fas fa-radiation fa-5x pulse"></i>
-        <h1>SYSTEM TERMINATED</h1>
-        <p>بروتوكول السيادة: تم إيقاف كافة العمليات المالية عالمياً بقرار إداري</p>
-    </div>
-
     <div class="sidebar">
-        <div class="logo-box">EGO CHAIN</div>
+        <h2 style="color:var(--gold)">EGO CHAIN</h2>
         
-        <div id="scarcity-box" class="card" style="border-left:3px solid var(--green)">
-            <small>تضييق السيولة (AURA):</small>
+        <div class="card" style="border-left:3px solid var(--green)">
+            <small>تضييق السيولة (Max: 21M)</small>
             <div id="aura-scarcity" class="stat-val">0.00</div>
-            <div style="font-size: 9px; color: #888;">BTC Scarcity Logic Active</div>
+            <div class="progress-bg"><div id="supply-bar"></div></div>
+            <div id="supply-percent" style="font-size: 10px; color: var(--gold);">0% من السقف السيادي</div>
         </div>
 
-        <div style="margin-top: auto;">
-            <div class="card" style="border: 1px solid var(--danger); background: rgba(255,75,43,0.05);">
-                <small style="color:var(--danger)">غرفة العمليات السيادية</small>
-                <button onclick="triggerKill()" style="background:var(--danger); color:white; border:none; padding:10px; width:100%; border-radius:5px; cursor:pointer; margin-top:5px;">
-                    <i class="fas fa-power-off"></i> إيقاف الشبكة
-                </button>
-            </div>
-        </div>
+        <button onclick="triggerKill()" style="background:var(--danger); color:white; border:none; padding:10px; margin-top:auto; border-radius:5px; cursor:pointer;">
+            <i class="fas fa-power-off"></i> إيقاف الشبكة
+        </button>
     </div>
 
     <div class="content">
-        <!-- الأرصدة الرئيسية -->
         <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:15px; margin-bottom:20px;">
-            <div class="card">
-                <h4><span class="hybrid-badge">Hybrid</span> AURA</h4>
-                <div class="stat-val" id="bal-aura">21,000,000.00</div>
-            </div>
-            <div class="card">
-                <h4>JEWEL</h4>
-                <div class="stat-val" id="bal-jewel">21,000,000.00</div>
-            </div>
-            <div class="card">
-                <h4>الخزينة (USDT)</h4>
-                <div class="stat-val" id="bal-usdt">0.00</div>
-            </div>
+            <div class="card"><h4>AURA Balance</h4><div class="stat-val" id="bal-aura">1,000,000</div></div>
+            <div class="card"><h4>JEWEL Balance</h4><div class="stat-val" id="bal-jewel">5,000,000</div></div>
+            <div class="card"><h4>Treasury (USDT)</h4><div class="stat-val" id="bal-usdt">0.00</div></div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1.5fr 1fr; gap:20px;">
-            <div class="left-col">
-                <!-- بوابة التحويل -->
-                <div class="card">
-                    <h3><i class="fas fa-paper-plane"></i> تحويل آمن (رسوم 2.5%)</h3>
-                    <select id="asset">
-                        <option value="AURA">Aura (BIT/LIT/ETH/XMR Hybrid)</option>
-                        <option value="JEWEL">Jewel (Standard)</option>
-                    </select>
-                    <input type="number" id="amount" placeholder="الكمية المراد إرسالها">
-                    <input type="text" id="recipient" placeholder="عنوان محفظة المستلم EGO_...">
-                    <div id="preview" style="background: #000; padding: 10px; border-radius: 6px; font-size:12px; margin:10px 0; color:#aaa; border: 1px dashed #333;">
-                        الضريبة السيادية (2.5%): 0.00 | الصافي للمستلم: 0.00
-                    </div>
-                    <button class="btn-gold" onclick="sendTx()">توقيع المعاملة بالبروتوكول الرباعي</button>
-                </div>
-
-                <!-- سجل العمليات -->
-                <div class="card">
-                    <h3><i class="fas fa-list-ul"></i> سجل النشاط السيادي</h3>
-                    <div id="ledger" style="max-height: 200px; overflow-y: auto;"></div>
-                </div>
+        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:20px;">
+            <div class="card">
+                <h3>إرسال أصول (ضريبة 2.5%)</h3>
+                <select id="asset"><option value="AURA">Aura (Hybrid Core)</option><option value="JEWEL">Jewel</option></select>
+                <input type="number" id="amount" placeholder="الكمية">
+                <input type="text" id="recipient" placeholder="EGO_...">
+                <div id="preview" style="font-size:12px; color:#888; margin:10px 0;">الرسوم: 0.00 | الصافي: 0.00</div>
+                <button class="btn-gold" onclick="sendTx()">توقيع وإرسال</button>
+                <div id="ledger" style="margin-top:20px;"></div>
             </div>
 
-            <div class="right-col">
-                <!-- بوابة التعميد السيادي -->
-                <div class="card" style="border: 1px solid var(--hybrid);">
-                    <h3 style="color: var(--gold);"><i class="fas fa-shield-halved"></i> تفعيل العقد الهجين</h3>
-                    <p style="font-size: 10px; color: #888;">DNA: BIT + LIT + ETH + XMR</p>
-                    <textarea id="auraGenesisKey" readonly rows="6">
-{
-  "header": "EGO-AURA-HYBRID-V1",
-  "issuer": "CENTRAL-BANK-OF-EGYPT",
-  "dna": ["BTC", "LTC", "ETH", "XMR"],
-  "privacy": "RING-SIGNATURE-ENABLED",
-  "tax": "2.5_FIXED",
-  "signature": "8db3f7a1c9e0b2d5f1..." 
-}</textarea>
-                    <button class="btn-gold" style="background: var(--hybrid); color: #fff; margin-top: 10px;" onclick="deployAuraCore()">
-                        تعميد Aura Core
-                    </button>
-                </div>
+            <div class="card" style="border: 1px solid #7b1fa2;">
+                <h3>تعميد Aura Core</h3>
+                <textarea readonly rows="6" style="font-size:9px;">{ "issuer": "CBE", "max_supply": 21000000, "dna": ["BTC", "LTC", "ETH", "XMR"], "tax": "2.5%" }</textarea>
+                <button class="btn-gold" style="background:#7b1fa2; color:#fff;" onclick="alert('Aura Core Synchronized!')">تفعيل السيادة</button>
             </div>
         </div>
     </div>
@@ -128,50 +62,28 @@
     <script>
         const { ipcRenderer } = require('electron');
         
-        // حساب الرسوم الحية
         document.getElementById('amount').addEventListener('input', (e) => {
             const val = parseFloat(e.target.value) || 0;
             const tax = (val * 0.025).toFixed(4);
-            const net = (val - tax).toFixed(4);
-            document.getElementById('preview').innerText = الضريبة السيادية (2.5%): ${tax} | الصافي للمستلم: ${net};
+            document.getElementById('preview').innerText = الرسوم: ${tax} | الصافي: ${(val - tax).toFixed(4)};
         });
 
-        // تنفيذ التحويل
         function sendTx() {
-            const data = {
-                asset: document.getElementById('asset').value,
-                amount: document.getElementById('amount').value,
-                from: "EGO_OWNER_ADDR",
-                to: document.getElementById('recipient').value
-            };
-            if(!data.amount || !data.to) return alert("يرجى إكمال بيانات التحويل");
+            const data = { asset: document.getElementById('asset').value, amount: document.getElementById('amount').value, to: document.getElementById('recipient').value };
             ipcRenderer.send('initiate-transfer', data);
         }
 
-        // تفعيل العقد الهجين
-        function deployAuraCore() {
-            const dna = document.getElementById('auraGenesisKey').value;
-            ipcRenderer.send('activate-sovereign-dna', dna);
-            alert("تم إرسال بروتوكول Aura Core للتعميد السيادي...");
-        }
-
-        // استقبال التحديثات
         ipcRenderer.on('transfer-complete', (event, tx) => {
-            const item = <div class="tx-item"><b>${tx.id}</b>: تم تحويل ${tx.net} ${tx.asset} (الضريبة: ${tx.tax})</div>;
-            document.getElementById('ledger').insertAdjacentHTML('afterbegin', item);
-            document.getElementById('amount').value = '';
+            document.getElementById('ledger').innerHTML += <div style="font-size:11px; border-bottom:1px solid #333; padding:5px;">Sent ${tx.net} ${tx.asset} (Tax: ${tx.tax})</div>;
         });
 
-        ipcRenderer.on('network-halted', () => { 
-            document.getElementById('halt-screen').style.display = 'flex'; 
+        ipcRenderer.on('update-scarcity-metrics', (event, metrics) => {
+            const MAX = 21000000;
+            const percent = ((metrics.circulatingAura / MAX) * 100).toFixed(4);
+            document.getElementById('aura-scarcity').innerText = metrics.circulatingAura.toLocaleString();
+            document.getElementById('supply-bar').style.width = percent + "%";
+            document.getElementById('supply-percent').innerText = ${percent}% من السقف السيادي (21M);
         });
-
-        function triggerKill() {
-            if(confirm("تحذير: هل تريد إيقاف السيادة الرقمية عالمياً؟ لا يمكن التراجع!")) {
-                ipcRenderer.send('global-halt-initiate');
-            }
-        }
     </script>
 </body>
 </html>
-
