@@ -1,47 +1,54 @@
-﻿const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const crypto = require('crypto');
 const SecurityVault = require('../src/security-vault');
 const sync = require('../src/sync');
-const KillSwitch = require('../src/kill-switch');
+const { AuraEngine, JewelEngine } = require('../src/tokenomics-engine');
 
 let mainWindow;
-const netGuard = new KillSwitch("رابط_ملف_status_على_github_raw");
 
-async function createWindow() {
+function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 1200, height: 850,
+        width: 1250, height: 900,
         webPreferences: { nodeIntegration: true, contextIsolation: false },
-        title: "EgoChain Core - Sovereign Edition",
+        title: "EgoChain Core - 21M Sovereign Edition",
         backgroundColor: '#0a0b0d'
     });
     mainWindow.loadFile('index.html');
-
-    // فحص دوري لحالة الشبكة (Kill Switch)
-    setInterval(async () => {
-        const status = await netGuard.checkNetworkStatus();
-        if (status === "HALTED") mainWindow.webContents.send('network-halted');
-    }, 30000);
 }
 
 ipcMain.on('initiate-transfer', async (event, data) => {
-    // التأكد من أن الشبكة ليست متوقفة
-    if (netGuard.isSystemHalted) return event.reply('transfer-error', "الشبكة متوقفة حالياً.");
+    try {
+        const amount = parseFloat(data.amount);
+        let engine = data.asset === "AURA" ? AuraEngine : JewelEngine;
+        
+        // معالجة الضريبة 2.5% وتحديث المحرك
+        const result = engine.processTransaction(amount);
+        
+        const txRecord = {
+            id: EGO-${crypto.randomBytes(3).toString('hex').toUpperCase()},
+            asset: data.asset,
+            original: amount,
+            tax: result.tax,
+            net: result.net,
+            time: Date.now()
+        };
 
-    // حساب الرسوم 2.5% والوصول للصافي
-    const tax = data.amount * 0.025;
-    const net = data.amount - tax;
+        // تحديث الواجهة بعدادات الندرة
+        const metrics = {
+            circulatingAura: AuraEngine.vaultBalance, // ما تم سحبه للخزينة
+            vaultUSDT: (AuraEngine.vaultBalance * 0.1).toFixed(2) // افتراض قيمة ربحية
+        };
 
-    const txRecord = {
-        id: EGO-${crypto.randomBytes(3).toString('hex').toUpperCase()},
-        ...data, tax, net, time: Date.now(), status: "SECURED"
-    };
+        event.reply('transfer-complete', txRecord);
+        event.reply('update-scarcity-metrics', metrics);
 
-    // التشفير AES-256 قبل الرفع للسحابة
-    const encryptedTx = SecurityVault.encrypt(JSON.stringify(txRecord));
-    await sync.pushToCloud(encryptedTx);
+        // المزامنة المشفرة مع GitHub
+        await sync(txRecord);
 
-    event.reply('transfer-complete', txRecord);
+    } catch (err) {
+        console.error(err);
+    }
 });
 
 app.whenReady().then(createWindow);
