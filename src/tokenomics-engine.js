@@ -15,6 +15,7 @@
     }
 }
 module.exports = { 
-    Aura: new TokenomicsEngine("AURA", 10000000), 
-    Jewel: new TokenomicsEngine("JEWEL", 50000000) 
+    Aura: new TokenomicsEngine("AURA", 21000000), 
+    Jewel: new TokenomicsEngine("JEWEL", 21000000) 
+
 };
