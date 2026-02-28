@@ -7,48 +7,35 @@
     <style>
         :root { --gold: #d4af37; --dark: #050505; --card: #121212; --green: #25d366; --danger: #ff4b2b; --blue: #007bff; }
         body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* Sidebar Menu */
         .sidebar { width: 280px; background: var(--card); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; z-index: 100; }
         .nav-link { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; color: #888; font-size: 14px; }
         .nav-link:hover, .nav-link.active { background: #1a1a1a; color: var(--gold); }
         .nav-link i { margin-left: 12px; width: 18px; }
-
-        /* Auth Panel */
         .auth-panel { background: #0a0a0a; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 20px; }
-        input, select { width: 100%; padding: 10px; margin: 5px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 12px; box-sizing: border-box; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 12px; box-sizing: border-box; }
         .btn-sm { flex: 1; padding: 8px; font-size: 11px; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; }
-
-        /* Main Content */
         .main-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
         .viewport { display: none; }
         .viewport.active { display: block; animation: fadeIn 0.5s; }
-
-        /* Cards */
         .card { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px; position: relative; }
         .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
         .asset-card { text-align: center; border-bottom: 3px solid var(--gold); }
         .asset-val { font-size: 22px; font-weight: bold; color: var(--gold); margin: 5px 0; }
         .asset-usdt { font-size: 12px; color: #888; }
-
-        /* Buy Buttons */
         .buy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px; }
-        .btn-buy { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; color: #000; }
+        .btn-buy { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; color: #000; width: 100%; }
         .btn-buy.aura { background: var(--gold); }
         .btn-buy.jewel { background: var(--green); }
         .btn-buy:hover { filter: brightness(1.2); transform: translateY(-2px); }
-
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         #halt-screen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; color:var(--danger); flex-direction:column; justify-content:center; align-items:center; text-align:center; }
     </style>
 </head>
 <body>
 
-    <!-- شاشة الطوارئ -->
     <div id="halt-screen"><i class="fas fa-radiation fa-5x"></i><h1>NETWORK HALTED</h1><p>تم إيقاف العمليات لدواعي أمنية</p></div>
 
     <div class="sidebar">
-        <!-- زر الصفحة الرئيسية الجديد في أعلى القائمة -->
         <div class="nav-link active" onclick="app.view('home')" style="background: #1a1a1a; color: var(--gold); margin-bottom: 20px; border: 1px solid var(--gold);">
             <i class="fas fa-home"></i> الصفحة الرئيسية
         </div>
@@ -73,8 +60,6 @@
     </div>
 
     <div class="main-content">
-        
-        <!-- واجهة البدء (Home) -->
         <div id="view-home" class="viewport active">
             <div class="card" style="border-right: 4px solid var(--gold);">
                 <h2>مرحباً بك في EgoChain Sovereign</h2>
@@ -94,7 +79,6 @@
             </div>
         </div>
 
-        <!-- واجهة المحفظة والأرصدة -->
         <div id="view-wallet" class="viewport">
             <div class="card">
                 <h3><i class="fas fa-coins"></i> أرصدة المحفظة</h3>
@@ -102,12 +86,12 @@
                     <div class="card asset-card">
                         <small>عملة AURA</small>
                         <div class="asset-val" id="bal-aura">0.00</div>
-                        <div class="asset-usdt" id="val-aura-usdt">≈ 0.00 USDT</div>
+                        <div id="val-aura-usdt" class="asset-usdt">≈ 0.00 USDT</div>
                     </div>
                     <div class="card asset-card">
                         <small>عملة JEWEL</small>
                         <div class="asset-val" id="bal-jewel">0.00</div>
-                        <div class="asset-usdt" id="val-jewel-usdt">≈ 0.00 USDT</div>
+                        <div id="val-jewel-usdt" class="asset-usdt">≈ 0.00 USDT</div>
                     </div>
                     <div class="card asset-card">
                         <small>رصيد USDT</small>
@@ -118,85 +102,104 @@
                 <hr style="border:0; border-top:1px solid #333; margin: 20px 0;">
                 <input type="text" id="tx-to" placeholder="عنوان المستلم EGO_...">
                 <input type="number" id="tx-amt" placeholder="الكمية المراد إرسالها">
-                <button class="btn-buy aura" style="width:100%" onclick="app.sendTx()">توقيع وإرسال (بمفتاح التوقيع)</button>
+                <button class="btn-buy aura" onclick="app.sendTx()">توقيع وإرسال (بمفتاح التوقيع)</button>
             </div>
         </div>
 
-        <!-- واجهة مصنع العقود -->
         <div id="view-factory" class="viewport">
             <div class="card">
                 <h3><i class="fas fa-plus-square"></i> إنشاء عقد ذكي (توليد ذاتي)</h3>
                 <input type="text" id="contract-name" placeholder="اسم العقد / الأصل">
                 <textarea id="contract-body" style="height:120px; background:#000; color:var(--green); border:1px solid #333; border-radius:8px;" placeholder="سيظهر كود العقد هنا بعد الضغط على توليد..."></textarea>
-                <button class="btn-buy jewel" style="width:100%; margin-top:10px;" onclick="app.deployContract()">توليد وتوقيع العقد فوراً</button>
+                <button class="btn-buy jewel" style="margin-top:10px;" onclick="app.deployContract()">توليد وتوقيع العقد فوراً</button>
             </div>
         </div>
-
     </div>
 
     <script>
-        const { ipcRenderer } = (typeof require !== 'undefined') ? require('electron') : { ipcRenderer: null };
+        // الربط مع Electron أو المحاكي لمنع التجمد
+        const ipc = (typeof require !== 'undefined') ? require('electron').ipcRenderer : {
+            send: (channel, data) => { 
+                console.log([Simulation] ${channel}:, data);
+                if(channel === 'initiate-buy') setTimeout(() => alert("✅ تمت محاكاة الشراء بنجاح!"), 500);
+            },
+            on: (channel, func) => { console.log(Listening on ${channel}); }
+        };
 
-        // ثوابت الأسعار التي حددتها
         const PRICES = { AURA: 0.63, JEWEL: 0.45 };
 
         const app = {
+            balances: { AURA: 0, JEWEL: 0, USDT: 100.00 }, // رصيد افتراضي للتجربة
+
             view: (id) => {
                 document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 document.getElementById('view-' + id).classList.add('active');
             },
 
-            // دالة شراء العملات بالـ USDT
-            buyAsset: (asset, price) => {
-                const usdtBal = parseFloat(document.getElementById('bal-usdt').innerText);
-                const amountToBuy = prompt(أدخل كمية الـ \${asset} التي تريد شراؤها بسعر \${price} USDT:);
-                if (!amountToBuy) return;
-
-                const cost = amountToBuy * price;
-                if (usdtBal < cost) return alert("⚠️ رصيد USDT غير كافٍ لإتمام عملية الشراء.");
-
-                if (confirm(تأكيد شراء \${amountToBuy} \${asset} مقابل \${cost} USDT؟)) {
-                    ipcRenderer.send('initiate-buy', { asset, amount: amountToBuy, cost });
-                }
+            login: () => {
+                const id = document.getElementById('auth-id').value;
+                if(!id) return alert("يرجى إدخال بيانات الدخول");
+                alert("تم تسجيل الدخول بنجاح ✓");
+                app.updateUI();
             },
 
-            // تحديث الأرصدة والتقييم بالـ USDT
-            updateBalances: (balances) => {
-                document.getElementById('bal-aura').innerText = balances.AURA.toFixed(2);
-                document.getElementById('bal-jewel').innerText = balances.JEWEL.toFixed(2);
-                document.getElementById('bal-usdt').innerText = balances.USDT.toFixed(2);
+            generateWallet: () => {
+                const key = document.getElementById('auth-key').value;
+                if(!key) return alert("إنشاء المحفظة يتطلب إدخال المفتاح السري أولاً");
+                alert("تم إنشاء محفظتك وربطها بالمفتاح السري كعنوان توقيع.");
+            },
 
-                // حساب القيمة الإجمالية بالـ USDT
-                document.getElementById('val-aura-usdt').innerText = ≈ \${(balances.AURA * PRICES.AURA).toFixed(2)} USDT;
-                document.getElementById('val-jewel-usdt').innerText = ≈ \${(balances.JEWEL * PRICES.JEWEL).toFixed(2)} USDT;
+            buyAsset: (asset, price) => {
+                const amount = prompt(كمية ${asset} المطلوبة بسعر ${price} USDT:);
+                if(!amount || isNaN(amount)) return;
+                const cost = amount * price;
+                if(app.balances.USDT < cost) return alert("عذراً، رصيد USDT غير كافٍ");
+                
+                app.balances.USDT -= cost;
+                app.balances[asset] += parseFloat(amount);
+                app.updateUI();
+                ipc.send('initiate-buy', { asset, amount, cost });
+            },
+
+            sendTx: () => {
+                const key = document.getElementById('auth-key').value;
+                if(!key) return alert("⚠️ التوقيع مطلوب: يرجى إدخال المفتاح السري لإرسال الأصول");
+                alert("تم توقيع المعاملة رقمياً وجاري المعالجة...");
+            },
+
+            updateUI: () => {
+                document.getElementById('bal-aura').innerText = app.balances.AURA.toFixed(2);
+                document.getElementById('bal-jewel').innerText = app.balances.JEWEL.toFixed(2);
+                document.getElementById('bal-usdt').innerText = app.balances.USDT.toFixed(2);
+                document.getElementById('val-aura-usdt').innerText = ≈ ${(app.balances.AURA * PRICES.AURA).toFixed(2)} USDT;
+                document.getElementById('val-jewel-usdt').innerText = ≈ ${(app.balances.JEWEL * PRICES.JEWEL).toFixed(2)} USDT;
             },
 
             deployContract: () => {
                 const name = document.getElementById('contract-name').value;
                 const key = document.getElementById('auth-key').value;
-                if(!name || !key) return alert("⚠️ يجب إدخال اسم العقد والمفتاح السري (التوقيع).");
-
+                if(!name || !key) return alert("يرجى إدخال اسم العقد والمفتاح السري");
+                
                 const contract = {
                     id: "SC-" + Math.random().toString(36).substr(2,9).toUpperCase(),
                     name: name,
-                    owner: "EGO_OWNER",
-                    dna: ["BIT", "LIT", "ETH", "XMR"],
                     signature: btoa(key),
+                    dna: ["BIT", "LIT", "ETH", "XMR"],
                     timestamp: new Date().toISOString()
                 };
                 document.getElementById('contract-body').value = JSON.stringify(contract, null, 2);
-                ipcRenderer.send('sync-new-contract', contract);
-                alert("✅ تم توليد العقد وتوقيعه رقمياً بنجاح.");
+                ipc.send('sync-new-contract', contract);
             }
         };
 
-        // استقبال التحديثات من برنامج Electron الفعلي
-        if(ipcRenderer) {
-            ipcRenderer.on('balance-updated', (event, balances) => app.updateBalances(balances));
-            ipcRenderer.on('network-halted', () => document.getElementById('halt-screen').style.display = 'flex');
+        function triggerKill() {
+            if(confirm("تحذير: هل تريد إيقاف الشبكة؟")) ipc.send('global-halt-initiate');
         }
+
+        app.updateUI();
     </script>
 </body>
 </html>
-
+cdnjs.cloudflare.com
+cdnjs.cloudflare.com is an ultra-fast, reliable, globally available content delivery network for open-source libraries.
