@@ -116,88 +116,114 @@
         </div>
     </div>
 
-    <script>
-        // الربط مع Electron أو المحاكي لمنع التجمد
-        const ipc = (typeof require !== 'undefined') ? require('electron').ipcRenderer : {
-            send: (channel, data) => { 
-                console.log([Simulation] ${channel}:, data);
-                if(channel === 'initiate-buy') setTimeout(() => alert("✅ تمت محاكاة الشراء بنجاح!"), 500);
-            },
-            on: (channel, func) => { console.log(Listening on ${channel}); }
-        };
-
-        const PRICES = { AURA: 0.63, JEWEL: 0.45 };
-
-        const app = {
-            balances: { AURA: 0, JEWEL: 0, USDT: 100.00 }, // رصيد افتراضي للتجربة
-
-            view: (id) => {
-                document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                document.getElementById('view-' + id).classList.add('active');
-            },
-
-            login: () => {
-                const id = document.getElementById('auth-id').value;
-                if(!id) return alert("يرجى إدخال بيانات الدخول");
-                alert("تم تسجيل الدخول بنجاح ✓");
-                app.updateUI();
-            },
-
-            generateWallet: () => {
-                const key = document.getElementById('auth-key').value;
-                if(!key) return alert("إنشاء المحفظة يتطلب إدخال المفتاح السري أولاً");
-                alert("تم إنشاء محفظتك وربطها بالمفتاح السري كعنوان توقيع.");
-            },
-
-            buyAsset: (asset, price) => {
-                const amount = prompt(كمية ${asset} المطلوبة بسعر ${price} USDT:);
-                if(!amount || isNaN(amount)) return;
-                const cost = amount * price;
-                if(app.balances.USDT < cost) return alert("عذراً، رصيد USDT غير كافٍ");
-                
-                app.balances.USDT -= cost;
-                app.balances[asset] += parseFloat(amount);
-                app.updateUI();
-                ipc.send('initiate-buy', { asset, amount, cost });
-            },
-
-            sendTx: () => {
-                const key = document.getElementById('auth-key').value;
-                if(!key) return alert("⚠️ التوقيع مطلوب: يرجى إدخال المفتاح السري لإرسال الأصول");
-                alert("تم توقيع المعاملة رقمياً وجاري المعالجة...");
-            },
-
-            updateUI: () => {
-                document.getElementById('bal-aura').innerText = app.balances.AURA.toFixed(2);
-                document.getElementById('bal-jewel').innerText = app.balances.JEWEL.toFixed(2);
-                document.getElementById('bal-usdt').innerText = app.balances.USDT.toFixed(2);
-                document.getElementById('val-aura-usdt').innerText = ≈ ${(app.balances.AURA * PRICES.AURA).toFixed(2)} USDT;
-                document.getElementById('val-jewel-usdt').innerText = ≈ ${(app.balances.JEWEL * PRICES.JEWEL).toFixed(2)} USDT;
-            },
-
-            deployContract: () => {
-                const name = document.getElementById('contract-name').value;
-                const key = document.getElementById('auth-key').value;
-                if(!name || !key) return alert("يرجى إدخال اسم العقد والمفتاح السري");
-                
-                const contract = {
-                    id: "SC-" + Math.random().toString(36).substr(2,9).toUpperCase(),
-                    name: name,
-                    signature: btoa(key),
-                    dna: ["BIT", "LIT", "ETH", "XMR"],
-                    timestamp: new Date().toISOString()
-                };
-                document.getElementById('contract-body').value = JSON.stringify(contract, null, 2);
-                ipc.send('sync-new-contract', contract);
-            }
-        };
-
-        function triggerKill() {
-            if(confirm("تحذير: هل تريد إيقاف الشبكة؟")) ipc.send('global-halt-initiate');
+   <script>
+    // --- 1. محرك الربط الذكي (Hybrid Bridge) ---
+    // هذا الكود يمنع تجمد الصفحة ويحول الأوامر للمحاكاة إذا كنت خارج البرنامج
+    let ipc;
+    try {
+        if (window.require) {
+            ipc = window.require('electron').ipcRenderer;
+            console.log("✅ وضع البرنامج: الاتصال بـ Electron نشط");
+        } else {
+            throw new Error("Not in Electron");
         }
+    } catch (e) {
+        // محاكي العمليات للمتصفح (Netlify) لضمان عمل الأزرار
+        ipc = {
+            send: (channel, data) => {
+                console.log([إشارة سحابية]: ${channel}, data);
+                if(channel === 'initiate-buy') {
+                    setTimeout(() => alert(✅ تم شراء ${data.amount} ${data.asset} بنجاح عبر السحابة!), 500);
+                }
+            },
+            on: (channel, func) => console.log([مراقبة]: ${channel})
+        };
+        console.log("🌐 وضع الويب: الأزرار تعمل بنظام المحاكاة السحابية");
+    }
 
-        app.updateUI();
-    </script>
+    // --- 2. محرك الأرصدة والأسعار ---
+    const PRICES = { AURA: 0.63, JEWEL: 0.45 };
+    const app = {
+        balances: { AURA: 1000.00, JEWEL: 5000.00, USDT: 100.00 }, // رصيد افتراضي للتجربة
+
+        view: (id) => {
+            document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            document.getElementById('view-' + id).classList.add('active');
+            // إضافة كلاس active للزر الذي تم ضغطه
+            event.currentTarget.classList.add('active');
+        },
+
+        login: () => {
+            const id = document.getElementById('auth-id').value;
+            if(!id) return alert("يرجى إدخال بريدك أو هاتفك");
+            alert("تم تسجيل الدخول بنجاح إلى شبكة EgoChain ✓");
+            app.updateUI();
+        },
+
+        generateWallet: () => {
+            const key = document.getElementById('auth-key').value;
+            if(!key) return alert("يرجى إدخال 'المفتاح السري' أولاً لتوليد هويتك");
+            alert("تم إنشاء محفظتك بنجاح وربطها بالتوقيع الرقمي.");
+        },
+
+        buyAsset: (asset, price) => {
+            const amount = prompt(كمية ${asset} المطلوبة بسعر ${price} USDT:);
+            if(!amount || isNaN(amount)) return;
+            const cost = amount * price;
+            
+            if(app.balances.USDT < cost) return alert("عذراً، رصيد USDT غير كافٍ");
+            
+            app.balances.USDT -= cost;
+            app.balances[asset] += parseFloat(amount);
+            app.updateUI();
+            
+            // إرسال الأمر للسحابة/البرنامج
+            ipc.send('initiate-buy', { asset, amount, cost });
+        },
+
+        sendTx: () => {
+            const key = document.getElementById('auth-key').value;
+            if(!key) return alert("⚠️ خطأ: يجب إدخال 'المفتاح السري' لتوقيع المعاملة");
+            alert("جاري توقيع المعاملة وإرسالها عبر بروتوكولات XMR/ETH...");
+        },
+
+        deployContract: () => {
+            const name = document.getElementById('contract-name').value;
+            const key = document.getElementById('auth-key').value;
+            if(!name || !key) return alert("يرجى إدخال اسم العقد والمفتاح السري");
+            
+            const contract = {
+                id: "SC-" + Math.random().toString(36).substr(2,9).toUpperCase(),
+                name: name,
+                signature: btoa(key),
+                dna: ["BIT", "LIT", "ETH", "XMR"],
+                timestamp: new Date().toISOString()
+            };
+            document.getElementById('contract-body').value = JSON.stringify(contract, null, 2);
+            ipc.send('sync-new-contract', contract);
+            alert("✅ تم توليد وتشفير العقد الذكي بنجاح!");
+        },
+
+        updateUI: () => {
+            document.getElementById('bal-aura').innerText = app.balances.AURA.toLocaleString();
+            document.getElementById('bal-jewel').innerText = app.balances.JEWEL.toLocaleString();
+            document.getElementById('bal-usdt').innerText = app.balances.USDT.toFixed(2);
+            document.getElementById('val-aura-usdt').innerText = ≈ ${(app.balances.AURA * PRICES.AURA).toLocaleString()} USDT;
+            document.getElementById('val-jewel-usdt').innerText = ≈ ${(app.balances.JEWEL * PRICES.JEWEL).toLocaleString()} USDT;
+        }
+    };
+
+    function triggerKill() {
+        if(confirm("تحذير: هل تريد تفعيل بروتوكول إيقاف الشبكة؟")) {
+            ipc.send('global-halt-initiate');
+            alert("تم إرسال إشارة الإيقاف...");
+        }
+    }
+
+    // تشغيل الواجهة فور التحميل
+    window.onload = () => app.updateUI();
+</script>
 </body>
 </html>
+
