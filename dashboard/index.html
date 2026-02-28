@@ -2,141 +2,123 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>EgoChain Core | Sovereign Dashboard</title>
-    <!-- استدعاء الأيقونات مع رابط بديل لضمان العمل -->
+    <title>EgoChain Sovereign | محفظة الانعزال التام</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
     <style>
-        :root { --gold: #d4af37; --dark: #050505; --card: #121212; --green: #25d366; --danger: #ff4b2b; --blue: #007bff; }
+        :root { --gold: #d4af37; --dark: #050505; --card: #121212; --green: #25d366; --danger: #ff4b2b; }
         body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 280px; background: var(--card); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
-        .nav-link { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; color: #888; font-size: 14px; border: 1px solid transparent; transition: 0.3s; }
-        .nav-link:hover, .nav-link.active { background: #1a1a1a; color: var(--gold); border-color: var(--gold); }
-        .nav-link i { margin-left: 12px; width: 18px; }
+        .nav-link { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; color: #888; font-size: 14px; border: 1px solid transparent; }
+        .nav-link.active { background: #1a1a1a; color: var(--gold); border-color: var(--gold); }
         .auth-panel { background: #0a0a0a; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 20px; }
-        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 12px; box-sizing: border-box; }
+        input { width: 100%; padding: 10px; margin: 5px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 11px; box-sizing: border-box; }
         .main-content { flex: 1; padding: 30px; overflow-y: auto; }
         .viewport { display: none; }
         .viewport.active { display: block; }
-        .card { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px; }
-        .asset-val { font-size: 22px; font-weight: bold; color: var(--gold); }
-        .btn-buy { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; color: #000; }
-        .btn-buy.aura { background: var(--gold); }
-        .btn-buy.jewel { background: var(--green); }
-        #halt-screen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; color:var(--danger); flex-direction:column; justify-content:center; align-items:center; text-align:center; }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; border: 1px solid #222; margin-bottom: 20px; }
+        .btn-gold { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; }
+        #user-tag { font-size: 10px; color: var(--green); text-align: center; margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
 
-    <div id="halt-screen"><i class="fas fa-radiation fa-5x"></i><h1>NETWORK HALTED</h1></div>
-
     <div class="sidebar">
-        <div id="btn-home" class="nav-link active" onclick="showPage('home')"><i class="fas fa-home"></i> الرئيسية</div>
+        <h2 style="color:var(--gold); text-align:center;">EGO CHAIN</h2>
+        <div id="user-tag"><i class="fas fa-user-shield"></i> متصل: <span id="display-id"></span></div>
+        
         <div class="auth-panel">
-            <input type="text" id="auth-id" placeholder="الهوية">
-            <input type="password" id="auth-pass" placeholder="الرقم السري">
-            <input type="password" id="auth-key" placeholder="المفتاح (التوقيع)">
-            <button class="btn-buy aura" style="font-size:10px; padding:5px" onclick="handleLogin()">دخول سيادي</button>
+            <input type="text" id="in-id" placeholder="الهوية (الإيميل/الهاتف)">
+            <input type="password" id="in-pass" placeholder="الرقم السري">
+            <input type="password" id="in-key" placeholder="المفتاح السري (التوقيع)">
+            <button class="btn-gold" style="margin-top:10px;" onclick="attemptLogin()">دخول سيادي</button>
         </div>
-        <div id="btn-wallet" class="nav-link" onclick="showPage('wallet')"><i class="fas fa-wallet"></i> المحفظة</div>
-        <div id="btn-factory" class="nav-link" onclick="showPage('factory')"><i class="fas fa-microchip"></i> المصنع</div>
-        <button onclick="triggerHalt()" style="background:var(--danger); color:#fff; border:none; padding:10px; border-radius:5px; margin-top:auto; cursor:pointer;">إيقاف</button>
+
+        <div class="nav-link active" onclick="showPage('home')"><i class="fas fa-home"></i> الرئيسية</div>
+        <div class="nav-link" onclick="showPage('wallet')"><i class="fas fa-wallet"></i> محفظتي الخاصة</div>
+        <div class="nav-link" onclick="showPage('factory')"><i class="fas fa-file-contract"></i> عقودي المشفرة</div>
     </div>
 
     <div class="main-content">
-        <div id="page-home" class="viewport active">
+        <!-- صفحة المحفظة -->
+        <div id="page-wallet" class="viewport active">
             <div class="card">
-                <h2>EgoChain Sovereign Core</h2>
+                <h3>أرصدة المستخدم الحالي</h3>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                    <div class="card" style="text-align:center">
-                        <h4>AURA</h4><div class="asset-val">0.63 USDT</div>
-                        <button class="btn-buy aura" onclick="buyCurrency('AURA', 0.63)">شراء</button>
-                    </div>
-                    <div class="card" style="text-align:center">
-                        <h4>JEWEL</h4><div class="asset-val">0.45 USDT</div>
-                        <button class="btn-buy jewel" onclick="buyCurrency('JEWEL', 0.45)">شراء</button>
-                    </div>
+                    <div class="card" style="text-align:center"><h4>AURA</h4><div id="u-aura" class="stat-val" style="font-size:24px; color:var(--gold)">0.00</div></div>
+                    <div class="card" style="text-align:center"><h4>USDT</h4><div id="u-usdt" class="stat-val" style="font-size:24px; color:var(--green)">0.00</div></div>
                 </div>
             </div>
         </div>
 
-        <div id="page-wallet" class="viewport">
-            <div class="card">
-                <h3>الأرصدة</h3>
-                <p>AURA: <span id="ui-aura">1000</span> | JEWEL: <span id="ui-jewel">5000</span></p>
-                <p>USDT: <span id="ui-usdt">100.00</span></p>
-                <input type="number" id="send-amt" placeholder="الكمية">
-                <button class="btn-buy aura" onclick="sendAssets()">توقيع وإرسال (2.5%)</button>
-            </div>
-        </div>
-
+        <!-- صفحة العقود المشفرة -->
         <div id="page-factory" class="viewport">
             <div class="card">
-                <h3>إنشاء عقد</h3>
+                <h3>إنشاء عقد ذكي جديد (Private)</h3>
                 <input type="text" id="c-name" placeholder="اسم العقد">
-                <textarea id="c-display" style="height:80px; background:#000; color:var(--green); border:1px solid #333; width:100%"></textarea>
-                <button class="btn-buy jewel" onclick="generateContract()">توليد</button>
+                <button class="btn-gold" onclick="generatePrivateContract()">توليد وحفظ في سجلي</button>
+                <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
+                <h4>عقودي السابقة:</h4>
+                <div id="contracts-list" style="font-size:11px; color:#aaa;">سجل العقود فارغ..</div>
             </div>
         </div>
     </div>
 
     <script>
-        // المحرك الهجين لضمان عدم انهيار الواجهة
-        var ipc = null;
-        try {
-            if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer') {
-                ipc = require('electron').ipcRenderer;
-            }
-        } catch (e) { console.log("Web Mode Activated"); }
+        const { ipcRenderer } = (typeof require !== 'undefined') ? require('electron') : { ipcRenderer: null };
+        let session = { id: null, key: null };
 
-        var myBal = { AURA: 1000, JEWEL: 5000, USDT: 100 };
+        function showPage(p) {
+            document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
+            document.getElementById('page-' + p).classList.add('active');
+        }
 
-        function showPage(id) {
-            const vps = document.getElementsByClassName('viewport');
-            for(let v of vps) v.classList.remove('active');
-            const btns = document.getElementsByClassName('nav-link');
-            for(let b of btns) b.classList.remove('active');
+        // تسجيل الدخول الفعلي
+        function attemptLogin() {
+            const auth = {
+                id: document.getElementById('in-id').value,
+                pass: document.getElementById('in-pass').value,
+                key: document.getElementById('in-key').value
+            };
+            if(!auth.id || !auth.key) return alert("المفتاح السري مطلوب!");
             
-            document.getElementById('page-' + id).classList.add('active');
-            document.getElementById('btn-' + id).classList.add('active');
+            if(ipcRenderer) {
+                ipcRenderer.send('request-secure-login', auth);
+                session = auth;
+            }
         }
 
-        function buyCurrency(asset, price) {
-            let amt = prompt("الكمية:");
-            if(!amt || isNaN(amt)) return;
-            let cost = amt * price;
-            if(myBal.USDT < cost) return alert("رصيد USDT غير كافٍ!");
-            myBal.USDT -= cost;
-            myBal[asset] += parseFloat(amt);
-            updateUI();
-            alert("تم الشراء بنجاح!");
-            if(ipc) ipc.send('initiate-buy', {asset, amt, cost});
+        // استقبال البيانات الخاصة بالمستخدم فقط
+        if(ipcRenderer) {
+            ipcRenderer.on('login-success', (event, data) => {
+                document.getElementById('user-tag').style.display = 'block';
+                document.getElementById('display-id').innerText = session.id;
+                document.getElementById('u-aura').innerText = data.balances.AURA.toLocaleString();
+                document.getElementById('u-usdt').innerText = data.balances.USDT.toFixed(2);
+                
+                // عرض العقود الخاصة بهذا المستخدم فقط
+                const list = document.getElementById('contracts-list');
+                list.innerHTML = data.history.length ? '' : 'لا توجد عقود مسجلة باسمك.';
+                data.history.forEach(c => {
+                    list.innerHTML += <div class="card" style="padding:10px; margin-bottom:5px;"><b>${c.name}</b><br>${c.contract_id}</div>;
+                });
+                alert("✅ تم تحميل بياناتك المشفرة بنجاح.");
+            });
+
+            ipcRenderer.on('auth-error', (event, msg) => alert(msg));
         }
 
-        function updateUI() {
-            document.getElementById('ui-aura').innerText = myBal.AURA;
-            document.getElementById('ui-jewel').innerText = myBal.JEWEL;
-            document.getElementById('ui-usdt').innerText = myBal.USDT.toFixed(2);
+        function generatePrivateContract() {
+            if(!session.id) return alert("سجل الدخول أولاً!");
+            const name = document.getElementById('c-name').value;
+            const contract = {
+                contract_id: "SC-" + Date.now(),
+                owner: session.id, // ربط بالمالك
+                name: name,
+                timestamp: new Date().toISOString()
+            };
+            ipcRenderer.send('save-private-contract', contract);
+            alert("🔒 تم حفظ العقد في سجلك السحابي الخاص.");
         }
-
-        function handleLogin() { alert("تم تسجيل الدخول ✓"); updateUI(); }
-
-        function sendAssets() {
-            let amt = document.getElementById('send-amt').value;
-            if(!amt) return alert("أدخل الكمية");
-            alert("تم التوقيع. الرسوم: " + (amt * 0.025).toFixed(4));
-            if(ipc) ipc.send('initiate-transfer', {amt});
-        }
-
-        function generateContract() {
-            let n = document.getElementById('c-name').value;
-            if(!n) return alert("أدخل الاسم");
-            let sc = { id: Date.now(), name: n, dna: "BIT_LIT_ETH_XMR" };
-            document.getElementById('c-display').value = JSON.stringify(sc, null, 2);
-        }
-
-        function triggerHalt() { if(confirm("إيقاف؟")) if(ipc) ipc.send('global-halt-initiate'); }
-
-        window.onload = updateUI;
     </script>
 </body>
 </html>
