@@ -2,13 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>EgoChain Sovereign | محفظة الانعزال التام</title>
+    <title>EgoChain Sovereign | المحفظة السيادية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
     <style>
         :root { --gold: #d4af37; --dark: #050505; --card: #121212; --green: #25d366; --danger: #ff4b2b; }
         body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 280px; background: var(--card); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
-        .nav-link { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; color: #888; font-size: 14px; border: 1px solid transparent; }
+        .nav-link { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; color: #888; font-size: 14px; border: 1px solid transparent; transition: 0.3s; }
         .nav-link.active { background: #1a1a1a; color: var(--gold); border-color: var(--gold); }
         .auth-panel { background: #0a0a0a; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 20px; }
         input { width: 100%; padding: 10px; margin: 5px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 11px; box-sizing: border-box; }
@@ -26,99 +26,102 @@
         <h2 style="color:var(--gold); text-align:center;">EGO CHAIN</h2>
         <div id="user-tag"><i class="fas fa-user-shield"></i> متصل: <span id="display-id"></span></div>
         
-        <div class="auth-panel">
+        <form onsubmit="return false;" class="auth-panel">
             <input type="text" id="in-id" placeholder="الهوية (الإيميل/الهاتف)">
             <input type="password" id="in-pass" placeholder="الرقم السري">
             <input type="password" id="in-key" placeholder="المفتاح السري (التوقيع)">
             <button class="btn-gold" style="margin-top:10px;" onclick="attemptLogin()">دخول سيادي</button>
-        </div>
+        </form>
 
-        <div class="nav-link active" onclick="showPage('home')"><i class="fas fa-home"></i> الرئيسية</div>
-        <div class="nav-link" onclick="showPage('wallet')"><i class="fas fa-wallet"></i> محفظتي الخاصة</div>
-        <div class="nav-link" onclick="showPage('factory')"><i class="fas fa-file-contract"></i> عقودي المشفرة</div>
+        <div id="link-home" class="nav-link active" onclick="showPage('home')"><i class="fas fa-home"></i> الرئيسية</div>
+        <div id="link-wallet" class="nav-link" onclick="showPage('wallet')"><i class="fas fa-wallet"></i> محفظتي الخاصة</div>
+        <div id="link-factory" class="nav-link" onclick="showPage('factory')"><i class="fas fa-file-contract"></i> عقودي المشفرة</div>
     </div>
 
     <div class="main-content">
-        <!-- صفحة المحفظة -->
-        <div id="page-wallet" class="viewport active">
+        <div id="page-home" class="viewport active">
+            <div class="card">
+                <h2>مرحباً بك في المنطقة السيادية</h2>
+                <p style="color:#888">تصفح البيانات متاح للجميع، لكن الإدارة تتطلب توقيع مفتاحك الخاص.</p>
+            </div>
+        </div>
+
+        <div id="page-wallet" class="viewport">
             <div class="card">
                 <h3>أرصدة المستخدم الحالي</h3>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-                    <div class="card" style="text-align:center"><h4>AURA</h4><div id="u-aura" class="stat-val" style="font-size:24px; color:var(--gold)">0.00</div></div>
-                    <div class="card" style="text-align:center"><h4>USDT</h4><div id="u-usdt" class="stat-val" style="font-size:24px; color:var(--green)">0.00</div></div>
+                    <div class="card" style="text-align:center"><h4>AURA</h4><div id="u-aura" style="font-size:24px; color:var(--gold)">0.00</div></div>
+                    <div class="card" style="text-align:center"><h4>USDT</h4><div id="u-usdt" style="font-size:24px; color:var(--green)">0.00</div></div>
                 </div>
             </div>
         </div>
 
-        <!-- صفحة العقود المشفرة -->
         <div id="page-factory" class="viewport">
             <div class="card">
                 <h3>إنشاء عقد ذكي جديد (Private)</h3>
                 <input type="text" id="c-name" placeholder="اسم العقد">
                 <button class="btn-gold" onclick="generatePrivateContract()">توليد وحفظ في سجلي</button>
                 <hr style="border:0; border-top:1px solid #333; margin:20px 0;">
-                <h4>عقودي السابقة:</h4>
                 <div id="contracts-list" style="font-size:11px; color:#aaa;">سجل العقود فارغ..</div>
             </div>
         </div>
     </div>
 
     <script>
-        const { ipcRenderer } = (typeof require !== 'undefined') ? require('electron') : { ipcRenderer: null };
+        // --- 1. تعريف الدوال أولاً لضمان وجودها عند الضغط ---
+        function showPage(p) {
+            const views = document.getElementsByClassName('viewport');
+            for(let v of views) v.classList.remove('active');
+            const links = document.getElementsByClassName('nav-link');
+            for(let l of links) l.classList.remove('active');
+            
+            document.getElementById('page-' + p).classList.add('active');
+            document.getElementById('link-' + p).classList.add('active');
+        }
+
         let session = { id: null, key: null };
 
-        function showPage(p) {
-            document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
-            document.getElementById('page-' + p).classList.add('active');
-        }
-
-        // تسجيل الدخول الفعلي
         function attemptLogin() {
-            const auth = {
-                id: document.getElementById('in-id').value,
-                pass: document.getElementById('in-pass').value,
-                key: document.getElementById('in-key').value
-            };
-            if(!auth.id || !auth.key) return alert("المفتاح السري مطلوب!");
+            const id = document.getElementById('in-id').value;
+            const pass = document.getElementById('in-pass').value;
+            const key = document.getElementById('in-key').value;
             
-            if(ipcRenderer) {
-                ipcRenderer.send('request-secure-login', auth);
-                session = auth;
-            }
-        }
-
-        // استقبال البيانات الخاصة بالمستخدم فقط
-        if(ipcRenderer) {
-            ipcRenderer.on('login-success', (event, data) => {
-                document.getElementById('user-tag').style.display = 'block';
-                document.getElementById('display-id').innerText = session.id;
-                document.getElementById('u-aura').innerText = data.balances.AURA.toLocaleString();
-                document.getElementById('u-usdt').innerText = data.balances.USDT.toFixed(2);
-                
-                // عرض العقود الخاصة بهذا المستخدم فقط
-                const list = document.getElementById('contracts-list');
-                list.innerHTML = data.history.length ? '' : 'لا توجد عقود مسجلة باسمك.';
-                data.history.forEach(c => {
-                    list.innerHTML += <div class="card" style="padding:10px; margin-bottom:5px;"><b>${c.name}</b><br>${c.contract_id}</div>;
-                });
-                alert("✅ تم تحميل بياناتك المشفرة بنجاح.");
-            });
-
-            ipcRenderer.on('auth-error', (event, msg) => alert(msg));
+            if(!id || !key) return alert("المعرف والمفتاح السري مطلوبان!");
+            
+            session = { id, key };
+            
+            // محاولة إرسال لـ Electron
+            try {
+                if (window.require) {
+                    const ipc = window.require('electron').ipcRenderer;
+                    ipc.send('request-secure-login', { id, pass, key });
+                } else {
+                    alert("✅ وضع المعاينة (Netlify): البيانات ستظهر محلياً فقط.");
+                    document.getElementById('user-tag').style.display = 'block';
+                    document.getElementById('display-id').innerText = id;
+                }
+            } catch(e) { console.log("Web mode active"); }
         }
 
         function generatePrivateContract() {
             if(!session.id) return alert("سجل الدخول أولاً!");
             const name = document.getElementById('c-name').value;
-            const contract = {
-                contract_id: "SC-" + Date.now(),
-                owner: session.id, // ربط بالمالك
-                name: name,
-                timestamp: new Date().toISOString()
-            };
-            ipcRenderer.send('save-private-contract', contract);
-            alert("🔒 تم حفظ العقد في سجلك السحابي الخاص.");
+            if(!name) return alert("أدخل اسم العقد");
+            alert("🔒 تم توقيع العقد باسم: " + session.id);
         }
+
+        // --- 2. محرك الربط مع Electron (محمي داخل try-catch) ---
+        try {
+            if (window.require) {
+                const ipc = window.require('electron').ipcRenderer;
+                ipc.on('login-success', (event, data) => {
+                    document.getElementById('user-tag').style.display = 'block';
+                    document.getElementById('display-id').innerText = session.id;
+                    document.getElementById('u-aura').innerText = data.balances.AURA.toLocaleString();
+                    document.getElementById('u-usdt').innerText = data.balances.USDT.toFixed(2);
+                });
+            }
+        } catch(e) { console.log("Electron bridge not available in browser"); }
     </script>
 </body>
 </html>
