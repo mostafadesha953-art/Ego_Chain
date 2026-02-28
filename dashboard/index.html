@@ -2,105 +2,99 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>EgoChain Sovereign | المنصة السيادية</title>
+    <title>EgoChain Open Source | منصة العقود الحرة</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
     <style>
-        :root { --gold: #d4af37; --dark: #050505; --card: #121212; --green: #25d366; --danger: #ff4b2b; }
+        :root { --gold: #d4af37; --dark: #050505; --card: #121212; --green: #25d366; --danger: #ff4b2b; --blue: #007bff; }
         body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; }
         
-        /* Sidebar Menu */
-        .sidebar { width: 280px; background: var(--card); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; z-index: 100; }
-        .nav-link { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; color: #888; font-size: 14px; }
-        .nav-link:hover, .nav-link.active { background: #1a1a1a; color: var(--gold); }
-        .nav-link i { margin-left: 12px; width: 18px; }
-
-        /* Auth Panel (Top Right) */
-        .auth-panel { background: #0a0a0a; padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 20px; }
-        .auth-panel input { width: 100%; padding: 10px; margin: 5px 0; background: #111; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 12px; box-sizing: border-box;}
-        .auth-btns { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-sm { flex: 1; padding: 8px; font-size: 11px; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; }
+        /* Sidebar & Auth Panel */
+        .sidebar { width: 280px; background: var(--card); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
+        .auth-panel { background: #0a0a0a; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 20px; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 12px; box-sizing: border-box; }
         
-        /* Main Content */
+        .btn-sm { flex: 1; padding: 8px; font-size: 11px; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; transition: 0.3s; }
+        .nav-link { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; color: #888; }
+        .nav-link.active, .nav-link:hover { background: #1a1a1a; color: var(--gold); }
+
+        /* Content Area */
         .main-content { flex: 1; padding: 30px; overflow-y: auto; }
         .viewport { display: none; }
-        .viewport.active { display: block; animation: fadeIn 0.5s; }
-
+        .viewport.active { display: block; }
         .card { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px; }
-        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        .btn-gold { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.3s; }
-        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212,175,55,0.3); }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .locked-msg { color: var(--danger); font-size: 12px; margin-top: 10px; text-align: center; display: none; }
+        
+        .btn-main { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; }
+        .btn-main:hover { filter: brightness(1.2); }
+        .status-tag { font-size: 10px; text-align: center; margin-top: 8px; }
     </style>
 </head>
 <body>
 
-    <!-- القائمة الجانبية ونظام الدخول -->
     <div class="sidebar">
-        <h2 style="color: var(--gold); text-align: center; margin-bottom: 25px;">EGO CHAIN</h2>
+        <h2 style="color: var(--gold); text-align: center;">EGO CHAIN</h2>
         
-        <!-- نظام الدخول الجانبي -->
+        <!-- نظام الدخول والإنشاء الجانبي -->
         <div class="auth-panel">
             <input type="text" id="auth-id" placeholder="البريد أو الهاتف">
             <input type="password" id="auth-pass" placeholder="الرقم السري">
-            <input type="password" id="auth-key" placeholder="المفتاح السري (للتوقيع والإنشاء)">
+            <input type="password" id="auth-key" placeholder="المفتاح السري (التوقيع)">
             
-            <div class="auth-btns">
-                <button class="btn-sm" style="background: var(--green); color: #000;" onclick="app.register()">إنشاء محفظة</button>
-                <button class="btn-sm" style="background: var(--gold); color: #000;" onclick="app.login()">تسجيل دخول</button>
+            <div style="display: flex; gap: 5px; margin-top: 10px;">
+                <button class="btn-sm" style="background: var(--blue); color: #fff;" onclick="app.generateWallet()">إنشاء محفظة</button>
+                <button class="btn-sm" style="background: var(--gold); color: #000;" onclick="app.login()">دخول</button>
             </div>
-            <div id="user-status" style="font-size: 10px; margin-top: 10px; color: #888; text-align: center;">الوضع الحالي: زائر (تصفح فقط)</div>
+            <div id="user-status" class="status-tag" style="color: #666;">وضع الزائر: تصفح فقط</div>
         </div>
 
-        <div class="nav-link active" onclick="app.view('home')"><i class="fas fa-chart-pie"></i> السوق والندرة</div>
-        <div class="nav-link" onclick="app.view('wallet')"><i class="fas fa-wallet"></i> المحفظة والأصول</div>
-        <div class="nav-link" onclick="app.view('factory')"><i class="fas fa-industry"></i> مصنع العقود</div>
-        <div class="nav-link" onclick="app.view('docs')"><i class="fas fa-book"></i> الوثائق السيادية</div>
+        <div class="nav-link active" onclick="app.view('home')"><i class="fas fa-globe"></i> استكشاف الشبكة</div>
+        <div class="nav-link" onclick="app.view('factory')"><i class="fas fa-code"></i> إنشاء عقد ذكي</div>
+        <div class="nav-link" onclick="app.view('wallet')"><i class="fas fa-wallet"></i> محفظتي</div>
     </div>
 
-    <!-- المحتوى الرئيسي -->
     <div class="main-content">
         
-        <!-- 1. شاشة السوق (متاحة للكل) -->
+        <!-- واجهة الاستكشاف -->
         <div id="view-home" class="viewport active">
-            <div class="stat-grid">
-                <div class="card"><h4>AURA Reserve</h4><h2 style="color:var(--gold)">12.4M</h2></div>
-                <div class="card"><h4>JEWEL Reserve</h4><h2 style="color:var(--gold)">18.1M</h2></div>
-                <div class="card"><h4>الخزينة السيادية</h4><h2 style="color:var(--green)">142.5K $</h2></div>
-            </div>
-            <div class="card">
-                <h3><i class="fas fa-microchip"></i> حالة التضييق الذكي (21M Max)</h3>
-                <div style="background: #222; height: 12px; border-radius: 10px; overflow: hidden; margin: 15px 0;">
-                    <div style="width: 35%; height: 100%; background: linear-gradient(90deg, var(--gold), var(--green));"></div>
-                </div>
-                <p style="font-size: 12px; color: #888;">تم إصدار 35% من الكتلة النقدية السيادية. الرسوم الحالية: 2.5% ثابتة.</p>
-            </div>
-        </div>
-
-        <!-- 2. شاشة المحفظة (تتطلب دخول) -->
-        <div id="view-wallet" class="viewport">
-            <div class="card">
-                <h3><i class="fas fa-shield-alt"></i> عمليات المحفظة</h3>
-                <div id="wallet-locked" class="locked-msg" style="display: block;">⚠️ يجب تسجيل الدخول أولاً لإدارة أصولك</div>
-                <div id="wallet-tools" style="display: none;">
-                    <select id="tx-asset"><option>AURA</option><option>JEWEL</option></select>
-                    <input type="number" placeholder="الكمية">
-                    <input type="text" placeholder="عنوان المستلم EGO_...">
-                    <button class="btn-gold" onclick="app.signAction()">توقيع وإرسال (يتطلب المفتاح السري)</button>
+            <div class="card" style="border-right: 4px solid var(--gold);">
+                <h3><i class="fas fa-chart-line"></i> حالة الندرة العالمية</h3>
+                <p>سقف العملة الثابت: 21,000,000 | الضريبة التلقائية: 2.5%</p>
+                <div style="background: #222; height: 10px; border-radius: 5px; overflow: hidden;">
+                    <div style="width: 15%; height: 100%; background: var(--gold);"></div>
                 </div>
             </div>
         </div>
 
-        <!-- 3. مصنع العقود (تتطلب دخول وموافقة) -->
+        <!-- واجهة إنشاء العقود (مفتوحة بالكامل) -->
         <div id="view-factory" class="viewport">
             <div class="card">
-                <h3><i class="fas fa-magic"></i> توليد عقد ذكي جديد</h3>
-                <div id="factory-locked" class="locked-msg" style="display: block;">⚠️ هذه الميزة متاحة فقط للمحافظ الموثقة</div>
-                <div id="factory-tools" style="display: none;">
-                    <input type="text" placeholder="اسم العملة / العقد">
-                    <textarea placeholder="كود التفعيل السيادي المستلم من البنك المركزي" style="width:100%; height:80px; background:#000; color:var(--green); border:1px solid #333; border-radius:8px;"></textarea>
-                    <button class="btn-gold" style="margin-top:10px;">إرسال طلب التعميد السيادي</button>
+                <h3><i class="fas fa-plus-square"></i> مصنع العقود المفتوحة</h3>
+                <p style="font-size: 12px; color: #888;">يمكنك الآن رفع أصولك أو إنشاء عقودك دون وسيط. التوقيع يتم عبر مفتاحك السري.</p>
+                
+                <input type="text" id="contract-name" placeholder="اسم العقد / الأصل الرقمي">
+                <select id="contract-type">
+                    <option>إصدار عملة جديدة (Minting)</option>
+                    <option>عقد بيع وشراء (Trade)</option>
+                    <option>عقد تجميد سيولة (Staking)</option>
+                </select>
+                <textarea id="contract-body" placeholder="وصف العقد أو كود التعريف البرمجي..." style="height: 100px;"></textarea>
+                
+                <div id="factory-lock-msg" style="color: var(--danger); font-size: 11px; margin-bottom: 10px;">⚠️ يرجى تسجيل الدخول وإدخال المفتاح السري لتوقيع العقد.</div>
+                
+                <button id="deploy-btn" class="btn-main" disabled onclick="app.deployContract()">رفع العقد على البلوكتشين فوراً</button>
+            </div>
+        </div>
+
+        <!-- واجهة المحفظة -->
+        <div id="view-wallet" class="viewport">
+            <div class="card">
+                <h3><i class="fas fa-wallet"></i> إدارة أصول المحفظة</h3>
+                <div id="wallet-lock-msg" style="color: var(--danger);">⚠️ سجل الدخول للوصول للأرصدة</div>
+                <div id="wallet-content" style="display: none;">
+                    <p>رصيدك الحالي: <b style="color: var(--gold);">0.00 AURA</b></p>
+                    <hr border="0" style="border-top: 1px solid #333;">
+                    <input type="text" placeholder="عنوان المستلم">
+                    <input type="number" placeholder="الكمية">
+                    <button class="btn-main" onclick="app.signTx()">توقيع وإرسال</button>
                 </div>
             </div>
         </div>
@@ -108,11 +102,9 @@
     </div>
 
     <script>
-        const { ipcRenderer } = (typeof require !== 'undefined') ? require('electron') : { ipcRenderer: null };
-
         const app = {
             isLoggedIn: false,
-            
+
             view: (id) => {
                 document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
                 document.getElementById('view-' + id).classList.add('active');
@@ -121,32 +113,31 @@
             login: () => {
                 const id = document.getElementById('auth-id').value;
                 const pass = document.getElementById('auth-pass').value;
-                if(!id || !pass) return alert("يرجى إدخال البيانات الأساسية");
+                if(!id || !pass) return alert("أدخل بيانات الدخول");
                 
                 app.isLoggedIn = true;
-                app.unlockFeatures();
-                document.getElementById('user-status').innerText = "الوضع الحالي: مستخدم نشط ✓";
+                document.getElementById('user-status').innerText = "تم الدخول ✓";
                 document.getElementById('user-status').style.color = "var(--green)";
+                app.unlock();
             },
 
-            register: () => {
+            generateWallet: () => {
                 const key = document.getElementById('auth-key').value;
-                if(!key) return alert("إنشاء المحفظة يتطلب إدخال 'المفتاح السري' أولاً ليكون توقيعك الرسمي");
-                
-                alert("تم توليد محفظتك السيادية وربطها بالمفتاح السري. يمكنك الآن تسجيل الدخول.");
+                if(!key) return alert("يجب إدخال المفتاح السري ليكون هو 'توقيعك الرقمي' للعقود");
+                alert("تم إنشاء محفظتك بنجاح. مفتاحك السري هو هويتك، لا تشاركه مع أحد.");
             },
 
-            unlockFeatures: () => {
-                document.getElementById('wallet-locked').style.display = 'none';
-                document.getElementById('wallet-tools').style.display = 'block';
-                document.getElementById('factory-locked').style.display = 'none';
-                document.getElementById('factory-tools').style.display = 'block';
+            unlock: () => {
+                document.getElementById('deploy-btn').disabled = false;
+                document.getElementById('factory-lock-msg').style.display = 'none';
+                document.getElementById('wallet-lock-msg').style.display = 'none';
+                document.getElementById('wallet-content').style.display = 'block';
             },
 
-            signAction: () => {
+            deployContract: () => {
                 const key = document.getElementById('auth-key').value;
-                if(!key) return alert("خطأ أمني: يجب إدخال 'المفتاح السري' لتوقيع هذه المعاملة رقمياً.");
-                alert("تم التوقيع بنجاح وجاري المزامنة مع سحابة EgoChain...");
+                if(!key) return alert("خطأ: التوقيع الرقمي (المفتاح السري) مطلوب لرفع العقد.");
+                alert("جاري رفع العقد المفتوح على شبكة EgoChain... تم التنفيذ بنجاح.");
             }
         };
     </script>
