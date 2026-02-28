@@ -2,124 +2,151 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>EgoChain | Sovereign Finance Platform</title>
+    <title>EgoChain Sovereign | المنصة السيادية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
     <style>
         :root { --gold: #d4af37; --dark: #050505; --card: #121212; --green: #25d366; --danger: #ff4b2b; }
-        body { background: var(--dark); color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; }
         
-        /* Navigation Sidebar */
-        .sidebar { width: 280px; background: var(--card); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
-        .nav-link { padding: 15px; margin: 5px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; color: #888; }
+        /* Sidebar Menu */
+        .sidebar { width: 280px; background: var(--card); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; z-index: 100; }
+        .nav-link { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; color: #888; font-size: 14px; }
         .nav-link:hover, .nav-link.active { background: #1a1a1a; color: var(--gold); }
-        .nav-link i { margin-left: 15px; width: 20px; }
+        .nav-link i { margin-left: 12px; width: 18px; }
 
-        /* Main View Container */
-        .viewport { flex: 1; padding: 30px; overflow-y: auto; display: none; }
-        .viewport.active { display: block; }
-
-        /* Cards & UI Elements */
-        .card { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px; }
-        .stat-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 8px; }
-        .btn { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; }
+        /* Auth Panel (Top Right) */
+        .auth-panel { background: #0a0a0a; padding: 15px; border-radius: 12px; border: 1px solid #222; margin-bottom: 20px; }
+        .auth-panel input { width: 100%; padding: 10px; margin: 5px 0; background: #111; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 12px; box-sizing: border-box;}
+        .auth-btns { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-sm { flex: 1; padding: 8px; font-size: 11px; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; }
         
-        /* Auth Screen Overlay */
-        #auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--dark); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        /* Main Content */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .viewport { display: none; }
+        .viewport.active { display: block; animation: fadeIn 0.5s; }
+
+        .card { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .btn-gold { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 15px; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.3s; }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212,175,55,0.3); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .locked-msg { color: var(--danger); font-size: 12px; margin-top: 10px; text-align: center; display: none; }
     </style>
 </head>
 <body>
 
-    <!-- 1. شاشة تسجيل الدخول وإنشاء المحفظة (تظهر أولاً) -->
-    <div id="auth-overlay">
-        <div class="card" style="width: 400px; text-align: center;">
-            <h2 style="color: var(--gold);">EGO CHAIN LOGIN</h2>
-            <div id="login-form">
-                <input type="text" id="user-id" placeholder="البريد الإلكتروني أو الهاتف">
-                <input type="password" id="user-pass" placeholder="المفتاح السري">
-                <button class="btn" onclick="app.login()">دخول للمحفظة السيادية</button>
-                <p style="font-size: 12px; margin-top: 15px;">ليس لديك محفظة؟ <a href="#" onclick="app.showRegister()" style="color:var(--gold)">أنشئ محفظة جديدة</a></p>
-            </div>
-            <div id="register-form" style="display: none;">
-                <p style="color: var(--green);">سيتم توليد مفاتيح تشفير RSA-2048 بت</p>
-                <button class="btn" style="background: var(--green);" onclick="app.generateWallet()">توليد هويتي الرقمية الآن</button>
-                <div id="key-display" style="display:none; margin-top:15px; font-size:10px; word-break:break-all; background:#000; padding:10px; color: var(--gold);"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. القائمة الجانبية -->
+    <!-- القائمة الجانبية ونظام الدخول -->
     <div class="sidebar">
-        <h2 style="color: var(--gold); text-align: center;">EGO CORE</h2>
-        <div class="nav-link active" onclick="app.view('home')"><i class="fas fa-home"></i> الرئيسية</div>
+        <h2 style="color: var(--gold); text-align: center; margin-bottom: 25px;">EGO CHAIN</h2>
+        
+        <!-- نظام الدخول الجانبي -->
+        <div class="auth-panel">
+            <input type="text" id="auth-id" placeholder="البريد أو الهاتف">
+            <input type="password" id="auth-pass" placeholder="الرقم السري">
+            <input type="password" id="auth-key" placeholder="المفتاح السري (للتوقيع والإنشاء)">
+            
+            <div class="auth-btns">
+                <button class="btn-sm" style="background: var(--green); color: #000;" onclick="app.register()">إنشاء محفظة</button>
+                <button class="btn-sm" style="background: var(--gold); color: #000;" onclick="app.login()">تسجيل دخول</button>
+            </div>
+            <div id="user-status" style="font-size: 10px; margin-top: 10px; color: #888; text-align: center;">الوضع الحالي: زائر (تصفح فقط)</div>
+        </div>
+
+        <div class="nav-link active" onclick="app.view('home')"><i class="fas fa-chart-pie"></i> السوق والندرة</div>
         <div class="nav-link" onclick="app.view('wallet')"><i class="fas fa-wallet"></i> المحفظة والأصول</div>
-        <div class="nav-link" onclick="app.view('contracts')"><i class="fas fa-file-signature"></i> مصنع العقود</div>
-        <div class="nav-link" onclick="app.view('admin')"><i class="fas fa-user-shield"></i> إدارة السيادة</div>
+        <div class="nav-link" onclick="app.view('factory')"><i class="fas fa-industry"></i> مصنع العقود</div>
+        <div class="nav-link" onclick="app.view('docs')"><i class="fas fa-book"></i> الوثائق السيادية</div>
     </div>
 
-    <!-- 3. مساحات العمل (Viewports) -->
-    <div class="content" style="flex:1">
+    <!-- المحتوى الرئيسي -->
+    <div class="main-content">
         
-        <!-- واجهة الرئيسية: عداد الندرة ووضع السوق -->
+        <!-- 1. شاشة السوق (متاحة للكل) -->
         <div id="view-home" class="viewport active">
-            <div class="stat-box">
-                <div class="card"><h4>رصيد AURA</h4><h2 id="aura-val">0.00</h2></div>
-                <div class="card"><h4>رصيد JEWEL</h4><h2 id="jewel-val">0.00</h2></div>
-                <div class="card"><h4>خزينة الشبكة</h4><h2 id="vault-val">0.00</h2></div>
+            <div class="stat-grid">
+                <div class="card"><h4>AURA Reserve</h4><h2 style="color:var(--gold)">12.4M</h2></div>
+                <div class="card"><h4>JEWEL Reserve</h4><h2 style="color:var(--gold)">18.1M</h2></div>
+                <div class="card"><h4>الخزينة السيادية</h4><h2 style="color:var(--green)">142.5K $</h2></div>
             </div>
             <div class="card">
-                <h3><i class="fas fa-chart-line"></i> عداد ندرة المعروض (21M Max)</h3>
-                <div style="background: #222; height: 20px; border-radius: 10px; overflow: hidden;">
-                    <div id="progress-bar" style="width: 5%; height: 100%; background: var(--gold); transition: 2s;"></div>
+                <h3><i class="fas fa-microchip"></i> حالة التضييق الذكي (21M Max)</h3>
+                <div style="background: #222; height: 12px; border-radius: 10px; overflow: hidden; margin: 15px 0;">
+                    <div style="width: 35%; height: 100%; background: linear-gradient(90deg, var(--gold), var(--green));"></div>
                 </div>
-                <p id="scarcity-text" style="text-align: center; color: var(--gold);">0.00% من السيادة الرقمية تم إصدارها</p>
+                <p style="font-size: 12px; color: #888;">تم إصدار 35% من الكتلة النقدية السيادية. الرسوم الحالية: 2.5% ثابتة.</p>
             </div>
         </div>
 
-        <!-- واجهة المحفظة: إرسال واستقبال -->
+        <!-- 2. شاشة المحفظة (تتطلب دخول) -->
         <div id="view-wallet" class="viewport">
             <div class="card">
-                <h3><i class="fas fa-paper-plane"></i> تحويل سريع (رسوم 2.5%)</h3>
-                <select id="asset-type"><option>AURA</option><option>JEWEL</option></select>
-                <input type="number" id="tx-amount" placeholder="الكمية">
-                <input type="text" id="tx-to" placeholder="عنوان المستلم EGO_...">
-                <button class="btn" onclick="app.sendTx()">توقيع المعاملة</button>
+                <h3><i class="fas fa-shield-alt"></i> عمليات المحفظة</h3>
+                <div id="wallet-locked" class="locked-msg" style="display: block;">⚠️ يجب تسجيل الدخول أولاً لإدارة أصولك</div>
+                <div id="wallet-tools" style="display: none;">
+                    <select id="tx-asset"><option>AURA</option><option>JEWEL</option></select>
+                    <input type="number" placeholder="الكمية">
+                    <input type="text" placeholder="عنوان المستلم EGO_...">
+                    <button class="btn-gold" onclick="app.signAction()">توقيع وإرسال (يتطلب المفتاح السري)</button>
+                </div>
             </div>
         </div>
 
-        <!-- واجهة العقود: توليد العقود ورفع العملات -->
-        <div id="view-contracts" class="viewport">
+        <!-- 3. مصنع العقود (تتطلب دخول وموافقة) -->
+        <div id="view-factory" class="viewport">
             <div class="card">
-                <h3><i class="fas fa-plus-circle"></i> مصنع الأصول الرقمية</h3>
-                <p>تطلب هذه العملية موافقة سيادية (CBE Approval Code)</p>
-                <input type="text" id="new-token-name" placeholder="اسم العملة الجديدة">
-                <input type="number" id="new-token-supply" placeholder="السقف الكلي (Max Supply)">
-                <textarea id="auth-code" placeholder="أدخل كود التعميد السيادي المستلم من البنك المركزي"></textarea>
-                <button class="btn" style="background: var(--green);">رفع الأصل المالي للشبكة</button>
+                <h3><i class="fas fa-magic"></i> توليد عقد ذكي جديد</h3>
+                <div id="factory-locked" class="locked-msg" style="display: block;">⚠️ هذه الميزة متاحة فقط للمحافظ الموثقة</div>
+                <div id="factory-tools" style="display: none;">
+                    <input type="text" placeholder="اسم العملة / العقد">
+                    <textarea placeholder="كود التفعيل السيادي المستلم من البنك المركزي" style="width:100%; height:80px; background:#000; color:var(--green); border:1px solid #333; border-radius:8px;"></textarea>
+                    <button class="btn-gold" style="margin-top:10px;">إرسال طلب التعميد السيادي</button>
+                </div>
             </div>
         </div>
 
     </div>
 
     <script>
+        const { ipcRenderer } = (typeof require !== 'undefined') ? require('electron') : { ipcRenderer: null };
+
         const app = {
+            isLoggedIn: false,
+            
             view: (id) => {
                 document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
                 document.getElementById('view-' + id).classList.add('active');
             },
-            showRegister: () => {
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('register-form').style.display = 'block';
-            },
-            generateWallet: () => {
-                // محاكاة توليد محفظة
-                const addr = "EGO_" + Math.random().toString(36).substr(2, 9).toUpperCase();
-                const key = "PRI_KEY_" + Math.random().toString(36).substr(2, 20).toUpperCase();
-                document.getElementById('key-display').style.display = 'block';
-                document.getElementById('key-display').innerHTML = العنوان: ${addr}<br>المفتاح السري: ${key}<br>(احفظ البيانات فوراً);
-            },
+
             login: () => {
-                document.getElementById('auth-overlay').style.display = 'none';
+                const id = document.getElementById('auth-id').value;
+                const pass = document.getElementById('auth-pass').value;
+                if(!id || !pass) return alert("يرجى إدخال البيانات الأساسية");
+                
+                app.isLoggedIn = true;
+                app.unlockFeatures();
+                document.getElementById('user-status').innerText = "الوضع الحالي: مستخدم نشط ✓";
+                document.getElementById('user-status').style.color = "var(--green)";
+            },
+
+            register: () => {
+                const key = document.getElementById('auth-key').value;
+                if(!key) return alert("إنشاء المحفظة يتطلب إدخال 'المفتاح السري' أولاً ليكون توقيعك الرسمي");
+                
+                alert("تم توليد محفظتك السيادية وربطها بالمفتاح السري. يمكنك الآن تسجيل الدخول.");
+            },
+
+            unlockFeatures: () => {
+                document.getElementById('wallet-locked').style.display = 'none';
+                document.getElementById('wallet-tools').style.display = 'block';
+                document.getElementById('factory-locked').style.display = 'none';
+                document.getElementById('factory-tools').style.display = 'block';
+            },
+
+            signAction: () => {
+                const key = document.getElementById('auth-key').value;
+                if(!key) return alert("خطأ أمني: يجب إدخال 'المفتاح السري' لتوقيع هذه المعاملة رقمياً.");
+                alert("تم التوقيع بنجاح وجاري المزامنة مع سحابة EgoChain...");
             }
         };
     </script>
