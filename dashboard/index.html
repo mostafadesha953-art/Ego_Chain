@@ -2,83 +2,58 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>EgoChain Core | النظام السيادي الموحد</title>
+    <title>EgoChain Core | Sovereign Dashboard</title>
+    <!-- استدعاء الأيقونات مع رابط بديل لضمان العمل -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
     <style>
         :root { --gold: #d4af37; --dark: #050505; --card: #121212; --green: #25d366; --danger: #ff4b2b; --blue: #007bff; }
         body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        .sidebar { width: 280px; background: var(--card); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; z-index: 100; }
-        .nav-link { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; color: #888; font-size: 14px; border: 1px solid transparent; }
+        .sidebar { width: 280px; background: var(--card); border-left: 1px solid #222; display: flex; flex-direction: column; padding: 20px; }
+        .nav-link { padding: 12px; margin: 5px 0; border-radius: 8px; cursor: pointer; display: flex; align-items: center; color: #888; font-size: 14px; border: 1px solid transparent; transition: 0.3s; }
         .nav-link:hover, .nav-link.active { background: #1a1a1a; color: var(--gold); border-color: var(--gold); }
         .nav-link i { margin-left: 12px; width: 18px; }
-
         .auth-panel { background: #0a0a0a; padding: 15px; border-radius: 12px; border: 1px solid #333; margin-bottom: 20px; }
         input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; background: #000; border: 1px solid #333; color: #fff; border-radius: 6px; font-size: 12px; box-sizing: border-box; }
-        .btn-sm { flex: 1; padding: 8px; font-size: 11px; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; }
-
-        .main-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
         .viewport { display: none; }
         .viewport.active { display: block; }
-
-        .card { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px; position: relative; }
-        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
-        .asset-card { text-align: center; border-bottom: 3px solid var(--gold); }
-        .asset-val { font-size: 22px; font-weight: bold; color: var(--gold); margin: 5px 0; }
-        .asset-usdt { font-size: 12px; color: #888; }
-
-        .btn-buy { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; color: #000; width: 100%; margin-top: 10px; }
+        .card { background: var(--card); padding: 25px; border-radius: 15px; border: 1px solid #222; margin-bottom: 20px; }
+        .asset-val { font-size: 22px; font-weight: bold; color: var(--gold); }
+        .btn-buy { padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; color: #000; }
         .btn-buy.aura { background: var(--gold); }
         .btn-buy.jewel { background: var(--green); }
-
-        /* Toast Notifications */
-        #toast-container { position: fixed; bottom: 20px; left: 20px; z-index: 10000; }
-        .toast { background: #1a1a1a; color: #fff; padding: 12px 20px; border-radius: 8px; border-right: 4px solid var(--gold); margin-top: 10px; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); animation: slideIn 0.3s ease-out; font-size: 13px; }
-        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-
         #halt-screen { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; color:var(--danger); flex-direction:column; justify-content:center; align-items:center; text-align:center; }
     </style>
 </head>
 <body>
 
-    <div id="toast-container"></div>
-    <div id="halt-screen"><i class="fas fa-radiation fa-5x"></i><h1>NETWORK HALTED</h1><p>تم إيقاف العمليات لدواعي أمنية</p></div>
+    <div id="halt-screen"><i class="fas fa-radiation fa-5x"></i><h1>NETWORK HALTED</h1></div>
 
     <div class="sidebar">
-        <div id="nav-home" class="nav-link active" onclick="showPage('home')"><i class="fas fa-home"></i> الرئيسية</div>
-
+        <div id="btn-home" class="nav-link active" onclick="showPage('home')"><i class="fas fa-home"></i> الرئيسية</div>
         <div class="auth-panel">
-            <input type="text" id="auth-id" placeholder="البريد أو الهاتف">
+            <input type="text" id="auth-id" placeholder="الهوية">
             <input type="password" id="auth-pass" placeholder="الرقم السري">
-            <input type="password" id="auth-key" placeholder="المفتاح السري (التوقيع)">
-            <div style="display: flex; gap: 5px; margin-top: 10px;">
-                <button class="btn-sm" style="background: var(--blue); color: #fff;" onclick="actionRegister()">إنشاء محفظة</button>
-                <button class="btn-sm" style="background: var(--gold); color: #000;" onclick="actionLogin()">دخول</button>
-            </div>
+            <input type="password" id="auth-key" placeholder="المفتاح (التوقيع)">
+            <button class="btn-buy aura" style="font-size:10px; padding:5px" onclick="handleLogin()">دخول سيادي</button>
         </div>
-
-        <div id="nav-wallet" class="nav-link" onclick="showPage('wallet')"><i class="fas fa-wallet"></i> محفظتي</div>
-        <div id="nav-factory" class="nav-link" onclick="showPage('factory')"><i class="fas fa-microchip"></i> مصنع العقود</div>
-        
-        <button onclick="triggerHalt()" style="background:var(--danger); color:white; border:none; padding:10px; width:100%; border-radius:5px; cursor:pointer; margin-top: auto;">
-            <i class="fas fa-power-off"></i> طوارئ
-        </button>
+        <div id="btn-wallet" class="nav-link" onclick="showPage('wallet')"><i class="fas fa-wallet"></i> المحفظة</div>
+        <div id="btn-factory" class="nav-link" onclick="showPage('factory')"><i class="fas fa-microchip"></i> المصنع</div>
+        <button onclick="triggerHalt()" style="background:var(--danger); color:#fff; border:none; padding:10px; border-radius:5px; margin-top:auto; cursor:pointer;">إيقاف</button>
     </div>
 
     <div class="main-content">
         <div id="page-home" class="viewport active">
-            <div class="card" style="border-right: 4px solid var(--gold);">
+            <div class="card">
                 <h2>EgoChain Sovereign Core</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                    <div class="card asset-card">
-                        <h4>Aura (AURA)</h4>
-                        <div class="asset-val">0.63 USDT</div>
-                        <button class="btn-buy aura" onclick="buyCurrency('AURA', 0.63)">شراء USDT</button>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                    <div class="card" style="text-align:center">
+                        <h4>AURA</h4><div class="asset-val">0.63 USDT</div>
+                        <button class="btn-buy aura" onclick="buyCurrency('AURA', 0.63)">شراء</button>
                     </div>
-                    <div class="card asset-card">
-                        <h4>Jewel (JWL)</h4>
-                        <div class="asset-val">0.45 USDT</div>
-                        <button class="btn-buy jewel" onclick="buyCurrency('JEWEL', 0.45)">شراء USDT</button>
+                    <div class="card" style="text-align:center">
+                        <h4>JEWEL</h4><div class="asset-val">0.45 USDT</div>
+                        <button class="btn-buy jewel" onclick="buyCurrency('JEWEL', 0.45)">شراء</button>
                     </div>
                 </div>
             </div>
@@ -86,100 +61,80 @@
 
         <div id="page-wallet" class="viewport">
             <div class="card">
-                <h3>أرصدة المحفظة</h3>
-                <div class="stat-grid">
-                    <div class="card asset-card"><small>AURA</small><div class="asset-val" id="ui-aura">0</div><div id="ui-aura-usdt" class="asset-usdt">0 USDT</div></div>
-                    <div class="card asset-card"><small>JEWEL</small><div class="asset-val" id="ui-jewel">0</div><div id="ui-jewel-usdt" class="asset-usdt">0 USDT</div></div>
-                    <div class="card asset-card"><small>USDT</small><div class="asset-val" id="ui-usdt">100.00</div></div>
-                </div>
-                <input type="text" id="send-to" placeholder="المستلم EGO_...">
+                <h3>الأرصدة</h3>
+                <p>AURA: <span id="ui-aura">1000</span> | JEWEL: <span id="ui-jewel">5000</span></p>
+                <p>USDT: <span id="ui-usdt">100.00</span></p>
                 <input type="number" id="send-amt" placeholder="الكمية">
-                <button class="btn-buy aura" onclick="sendAssets()">إرسال (توقيع 2.5%)</button>
+                <button class="btn-buy aura" onclick="sendAssets()">توقيع وإرسال (2.5%)</button>
             </div>
         </div>
 
         <div id="page-factory" class="viewport">
             <div class="card">
-                <h3>إنشاء عقد ذكي</h3>
+                <h3>إنشاء عقد</h3>
                 <input type="text" id="c-name" placeholder="اسم العقد">
-                <textarea id="c-display" style="height:100px;" readonly placeholder="كود العقد..."></textarea>
-                <button class="btn-buy jewel" onclick="generateContract()">توليد وتوقيع</button>
+                <textarea id="c-display" style="height:80px; background:#000; color:var(--green); border:1px solid #333; width:100%"></textarea>
+                <button class="btn-buy jewel" onclick="generateContract()">توليد</button>
             </div>
         </div>
     </div>
 
     <script>
-        // محرك الربط
-        let messenger = {
-            send: function(ch, data) {
-                if (window.require) {
-                    const { ipcRenderer } = window.require('electron');
-                    ipcRenderer.send(ch, data);
-                }
+        // المحرك الهجين لضمان عدم انهيار الواجهة
+        var ipc = null;
+        try {
+            if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer') {
+                ipc = require('electron').ipcRenderer;
             }
-        };
+        } catch (e) { console.log("Web Mode Activated"); }
 
-        let myBalances = { AURA: 1000, JEWEL: 5000, USDT: 100.00 };
-        const PRICES = { AURA: 0.63, JEWEL: 0.45 };
+        var myBal = { AURA: 1000, JEWEL: 5000, USDT: 100 };
 
-        function showToast(msg, color = '#d4af37') {
-            const container = document.getElementById('toast-container');
-            const t = document.createElement('div');
-            t.className = 'toast';
-            t.style.borderRightColor = color;
-            t.innerHTML = <i class="fas fa-info-circle"></i> ${msg};
-            container.appendChild(t);
-            setTimeout(() => t.remove(), 3500);
+        function showPage(id) {
+            const vps = document.getElementsByClassName('viewport');
+            for(let v of vps) v.classList.remove('active');
+            const btns = document.getElementsByClassName('nav-link');
+            for(let b of btns) b.classList.remove('active');
+            
+            document.getElementById('page-' + id).classList.add('active');
+            document.getElementById('btn-' + id).classList.add('active');
         }
 
-        function showPage(p) {
-            document.querySelectorAll('.viewport').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-            document.getElementById('page-' + p).classList.add('active');
-            document.getElementById('nav-' + p).classList.add('active');
+        function buyCurrency(asset, price) {
+            let amt = prompt("الكمية:");
+            if(!amt || isNaN(amt)) return;
+            let cost = amt * price;
+            if(myBal.USDT < cost) return alert("رصيد USDT غير كافٍ!");
+            myBal.USDT -= cost;
+            myBal[asset] += parseFloat(amt);
+            updateUI();
+            alert("تم الشراء بنجاح!");
+            if(ipc) ipc.send('initiate-buy', {asset, amt, cost});
         }
 
         function updateUI() {
-            document.getElementById('ui-aura').innerText = myBalances.AURA.toLocaleString();
-            document.getElementById('ui-jewel').innerText = myBalances.JEWEL.toLocaleString();
-            document.getElementById('ui-usdt').innerText = myBalances.USDT.toFixed(2);
-            document.getElementById('ui-aura-usdt').innerText = (myBalances.AURA * PRICES.AURA).toFixed(2) + " USDT";
-            document.getElementById('ui-jewel-usdt').innerText = (myBalances.JEWEL * PRICES.JEWEL).toFixed(2) + " USDT";
+            document.getElementById('ui-aura').innerText = myBal.AURA;
+            document.getElementById('ui-jewel').innerText = myBal.JEWEL;
+            document.getElementById('ui-usdt').innerText = myBal.USDT.toFixed(2);
         }
 
-        function buyCurrency(asset, p) {
-            let amt = prompt(كمية ${asset}:);
-            if(!amt || isNaN(amt)) return;
-            let cost = amt * p;
-            if(myBalances.USDT < cost) return showToast("رصيد USDT غير كافٍ!", "#ff4b2b");
-            myBalances.USDT -= cost;
-            myBalances[asset] += parseFloat(amt);
-            updateUI();
-            showToast(تم شراء ${amt} ${asset} بنجاح!, "#25d366");
-            messenger.send('initiate-buy', { asset, amt, cost });
-        }
+        function handleLogin() { alert("تم تسجيل الدخول ✓"); updateUI(); }
 
         function sendAssets() {
             let amt = document.getElementById('send-amt').value;
-            let key = document.getElementById('auth-key').value;
-            if(!amt || !key) return showToast("المفتاح والكمية مطلوبان!", "#ff4b2b");
-            let tax = (amt * 0.025).toFixed(4);
-            showToast(تم التوقيع. الرسوم: ${tax}, "#25d366");
-            messenger.send('initiate-transfer', { amt, tax });
+            if(!amt) return alert("أدخل الكمية");
+            alert("تم التوقيع. الرسوم: " + (amt * 0.025).toFixed(4));
+            if(ipc) ipc.send('initiate-transfer', {amt});
         }
 
         function generateContract() {
             let n = document.getElementById('c-name').value;
-            let k = document.getElementById('auth-key').value;
-            if(!n || !k) return showToast("الاسم والمفتاح مطلوبان!", "#ff4b2b");
-            let sc = { id: Date.now(), name: n, signature: btoa(k) };
+            if(!n) return alert("أدخل الاسم");
+            let sc = { id: Date.now(), name: n, dna: "BIT_LIT_ETH_XMR" };
             document.getElementById('c-display').value = JSON.stringify(sc, null, 2);
-            showToast("تم توليد العقد وتوقيعه.");
         }
 
-        function actionLogin() { showToast("تم تسجيل الدخول ✓"); updateUI(); }
-        function actionRegister() { showToast("تم إنشاء المحفظة بنجاح."); }
-        function triggerHalt() { if(confirm("إيقاف؟")) showToast("إرسال إشارة الإيقاف..."); }
+        function triggerHalt() { if(confirm("إيقاف؟")) if(ipc) ipc.send('global-halt-initiate'); }
 
         window.onload = updateUI;
     </script>
