@@ -2,106 +2,65 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
-
-// تأكد من وجود هذه الملفات في مساراتها الصحيحة أو قم بتعطيل الاستدعاء مؤقتاً للتجربة
 const SecurityVault = require('../src/security-vault');
 const sync = require('../src/sync');
-const { AuraEngine, JewelEngine } = require('../src/tokenomics-engine');
 
 let mainWindow;
 
-const ASSET_PRICES = {
-    AURA: 0.63,
-    JEWEL: 0.45
-};
+// محرك فك التشفير بناءً على مفتاح المستخدم
+function decryptUserData(encryptedData, userSecretKey) {
+    try {
+        // نستخدم المفتاح السري للمستخدم كـ Salt لفك التشفير
+        return SecurityVault.decrypt(encryptedData, userSecretKey);
+    } catch (e) { return null; }
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 1250, 
-        height: 900,
-        webPreferences: { 
-            nodeIntegration: true, 
-            contextIsolation: false,
-            enableRemoteModule: true 
-        },
-        title: "EgoChain Core - 21M Sovereign Edition",
-        backgroundColor: '#0a0b0d'
+        width: 1250, height: 900,
+        webPreferences: { nodeIntegration: true, contextIsolation: false },
+        title: "EgoChain Core - Sovereign Isolation Mode"
     });
-    
-    // تأكد من أن ملف index.html في نفس مجلد dashboard مع main.js
     mainWindow.loadFile(path.join(__dirname, 'index.html'));
 }
 
-// 1. محرك معالجة الشراء (تم إصلاح خطأ الـ Template Literal)
-ipcMain.on('initiate-buy', async (event, purchaseData) => {
+// تسجيل الدخول وجلب البيانات الخاصة فقط
+ipcMain.on('request-secure-login', async (event, auth) => {
     try {
-        const { asset, amount, cost } = purchaseData;
-        const usersPath = path.join(__dirname, '../database/users.json');
-        
-        if (!fs.existsSync(usersPath)) {
-            return console.error("Missing users.json database");
+        const usersData = JSON.parse(fs.readFileSync('./database/users.json', 'utf8'));
+        const user = usersData.find(u => u.id === auth.id && u.pass === auth.pass);
+
+        if (user) {
+            // جلب العقود المشفره من chain.json وتصفيتها
+            const allBlocks = JSON.parse(fs.readFileSync('./database/chain.json', 'utf8'));
+            // لا نرسل إلا العقود التي تخص هذا المستخدم (صاحب المفتاح)
+            const userBlocks = allBlocks.filter(b => b.owner === auth.id);
+            
+            event.reply('login-success', {
+                balances: user.balances,
+                history: userBlocks,
+                walletAddr: user.walletAddress
+            });
+        } else {
+            event.reply('auth-error', "خطأ: بيانات الدخول غير مطابقة للسجلات.");
         }
-
-        let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-        let user = users[0]; 
-
-        if (user.balances.USDT < cost) {
-            return event.reply('transfer-error', "عذراً، رصيد USDT غير كافٍ.");
-        }
-
-        user.balances.USDT -= parseFloat(cost);
-        user.balances[asset] += parseFloat(amount);
-
-        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-        event.reply('balance-updated', user.balances);
-
-        const buyRecord = {
-            id: BUY-${crypto.randomBytes(2).toString('hex').toUpperCase()}, // تم إصلاح علامات الاقتباس
-            type: "ASSET_PURCHASE",
-            asset, amount, cost, time: Date.now()
-        };
-        
-        await sync(buyRecord);
-
-    } catch (err) {
-        console.error("Buy Error:", err);
-    }
+    } catch (e) { console.error(e); }
 });
 
-// 2. محرك معالجة التحويل (تم إصلاح خطأ الـ Template Literal)
-ipcMain.on('initiate-transfer', async (event, data) => {
+// حفظ العقد في سجل المستخدم الخاص (مشفر)
+ipcMain.on('save-private-contract', async (event, contract) => {
     try {
-        const amount = parseFloat(data.amount);
-        let engine = data.asset === "AURA" ? AuraEngine : JewelEngine;
+        const chainPath = './database/chain.json';
+        let chain = JSON.parse(fs.readFileSync(chainPath, 'utf8'));
         
-        const result = engine.processTransaction(amount);
+        // إضافة العقد للسجل العام مع وسم الملكية
+        chain.push(contract);
+        fs.writeFileSync(chainPath, JSON.stringify(chain, null, 2));
         
-        const txRecord = {
-            id: EGO-${crypto.randomBytes(3).toString('hex').toUpperCase()}, // تم إصلاح علامات الاقتباس
-            asset: data.asset,
-            original: amount,
-            tax: result.tax,
-            net: result.net,
-            time: Date.now()
-        };
-
-        const metrics = {
-            circulatingAura: AuraEngine.vaultBalance,
-            vaultUSDT: (AuraEngine.vaultBalance * ASSET_PRICES.AURA).toFixed(2)
-        };
-
-        event.reply('transfer-complete', txRecord);
-        event.reply('update-scarcity-metrics', metrics);
-
-        await sync(txRecord);
-
-    } catch (err) {
-        console.error("Transfer Error:", err);
-    }
+        // مزامنة سحابية فورية لضمان عدم الضياع
+        await sync(contract);
+        console.log("🔒 Contract Secured in User Vault");
+    } catch (e) { console.error(e); }
 });
 
 app.whenReady().then(createWindow);
-
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') app.quit();
-});
