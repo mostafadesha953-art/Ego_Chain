@@ -114,6 +114,21 @@ async function syncToNetwork() {
     // هنا يتم استدعاء Firebase لرفع القيمة
 }
 </script>
+
+    <!-- في ملف user-portal.html -->
+<button onclick="triggerKillSwitch()" style="background: red; color: white;">
+    قفل سقف العملة للأبد (تحذير: لا يمكن التراجع!)
+</button>
+
+<script>
+function triggerKillSwitch() {
+    if(confirm("هل أنت متأكد؟ لن تتمكن من إصدار عملة واحدة إضافية بعد الآن!")) {
+        lockTokenSupplyForever("EGO_CHAIN_ADDRESS");
+        alert("تم القفل بنجاح.");
+    }
+}
+</script>
     
 </html>
+
 
