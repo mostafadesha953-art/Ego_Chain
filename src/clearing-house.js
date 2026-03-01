@@ -1,4 +1,17 @@
-﻿// src/clearing-house.js
+// src/clearing-house.js
+async function payStripe() {
+    const stripe = Stripe(process.env.STRIPE_PUBLIC_KEY);
+    // استدعاء Netlify Function لإنشاء Checkout Session
+    const response = await fetch('/.netlify/functions/create-stripe-session', { method: 'POST' });
+    const session = await response.json();
+    return stripe.redirectToCheckout({ sessionId: session.id });
+}
+
+async function payFawry() {
+    // توجيه المستخدم لبوابة فوري باستخدام المرجع (Reference Number)
+    const fawryURL = https://www.atfawry.com/ECommerceWeb/Fawry/payments/charge...;
+    window.location.href = fawryURL;
+}
 
 class EgoNetworkTax {
     constructor() {
@@ -46,4 +59,5 @@ class EgoNetworkTax {
         // هنا يتم تحديث رصيد محفظة الإدارة في قاعدة بيانات البلوكتشين
         console.log([NETWORK REVENUE] Received ${amount} ${assetType} in Main Vault.);
     }
+
 }
