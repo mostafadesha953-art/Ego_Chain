@@ -54,4 +54,16 @@ async function syncToGithub(blockchainData) {
     }
 }
 
+// أضف هذا الفحص في وظيفة الرفع (Sync)
+async function checkBeforeSync(tokenAddr) {
+    const docSnap = await getDoc(doc(db, "tokens", tokenAddr));
+    
+    if (docSnap.exists() && docSnap.data().isSupplyLocked) {
+        alert("خطأ: لا يمكن دمج العملات الجديدة، سقف العملة مغلق نهائياً!");
+        return false;
+    }
+    // أكمل عملية الرفع إذا كان السقف مفتوحاً...
+}
+
 module.exports = syncToGithub;
+
