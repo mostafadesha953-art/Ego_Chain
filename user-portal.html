@@ -128,7 +128,37 @@ function triggerKillSwitch() {
     }
 }
 </script>
+
+    <!-- أضف هذا الجزء في صفحة التحكم -->
+<div id="status-box" style="padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+    حالة سقف العملة: <span id="lockStatus">مفتوح (قابل للزيادة)</span>
+</div>
+
+<button id="lockBtn" onclick="triggerPermanentLock()" 
+        style="background: #ef4444; color: white; padding: 15px; border: none; cursor: pointer; font-weight: bold;">
+    إغلاق سقف العملة للأبد 🔒
+</button>
+
+<script>
+async function triggerPermanentLock() {
+    const confirmLock = confirm("تحذير نهائي: إذا قمت بقفل السقف، لن تتمكن من إصدار أي عملات جديدة (Minting) أبداً. هل أنت متأكد؟");
+    
+    if (confirmLock) {
+        const tokenAddr = "YOUR_TOKEN_ID"; // معرف العملة في Firebase
+        const success = await lockTokenSupplyForever(tokenAddr);
+        
+        if (success) {
+            document.getElementById('lockStatus').innerText = "مغلق نهائياً (Locked)";
+            document.getElementById('lockStatus').style.color = "red";
+            document.getElementById('lockBtn').disabled = true;
+            document.getElementById('lockBtn').style.opacity = "0.5";
+            alert("تم قفل السقف بنجاح في قاعدة البيانات.");
+        }
+    }
+}
+</script>
     
 </html>
+
 
 
