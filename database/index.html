@@ -46,6 +46,34 @@
         <button onclick="payWithStripe()">بطاقة ائتمان (دولار)</button>
         <div id="paypal-button-container"></div>
     </div>
+    <!-- أضف هذا الكود داخل بطاقة العقد الذكي في index.html -->
+<div class="ai-pricing-box" style="background: rgba(56, 189, 248, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+    <h4 style="color: #38bdf8; margin: 0;">💰 تقدير السعر الأولي (بواسطة AI)</h4>
+    <div style="font-size: 1.8rem; margin: 10px 0;">
+        <span id="ai-price-usd">0.0000</span> <small>$</small> | 
+        <span id="ai-price-egp">0.00</span> <small>ج.م</small>
+    </div>
+    <p style="font-size: 0.8rem; color: #94a3b8;">* تم التحديد بناءً على قوة التشفير ونظام الندرة 5%</p>
+    
+    <button onclick="purchaseTokenListing()" style="background: #4ade80;">شراء وتفعيل الطرح الأولي</button>
+</div>
+
+<script>
+// تحديث السعر حياً عند تغيير الإعدادات
+function updateAIPricing() {
+    // محاكاة قراءة الخصائص من الواجهة
+    const features = 5; // عدد الخصائص المختارة
+    const isLocked = true; // هل السقف مغلق؟
+    
+    const price = AIPricingEngine.calculateInitialPrice('AES-256', features, isLocked);
+    
+    document.getElementById('ai-price-usd').innerText = price.usd;
+    document.getElementById('ai-price-egp').innerText = price.egp;
+}
+
+// تشغيل التحديث عند تحميل الصفحة
+window.onload = updateAIPricing;
+</script>
 
     <!-- محرك التعدين والمحفظة -->
     <div class="card">
@@ -66,3 +94,4 @@
 <script src="main.js"></script>
 </body>
 </html>
+
