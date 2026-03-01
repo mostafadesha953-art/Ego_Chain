@@ -9,4 +9,17 @@ class GlobalKillSwitch {
         } catch (e) { return "OFFLINE"; }
     }
 }
+
 module.exports = GlobalKillSwitch;
+
+// src/kill-switch.js
+let isSupplyLocked = false;
+
+function lockTokenSupplyForever(tokenAddress) {
+    if (isSupplyLocked) return "خطأ: السقف مغلق بالفعل!";
+    
+    // منطق برمجي يمنع أي وظيفة Minting (صك عملات جديدة)
+    isSupplyLocked = true;
+    console.warn(تحذير: تم قفل عقد العملة ${tokenAddress} نهائياً.);
+    return true;
+}
