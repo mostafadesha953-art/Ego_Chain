@@ -1,21 +1,28 @@
-﻿function generateActionToken(walletAddress, amount) {
-    // بصمة رقمية فريدة لكل عملية تحويل
-    return crypto.createHmac('sha256', SECRET_KEY)
-                 .update(${walletAddress}-${amount}-${Date.now()})
-                 .digest('hex').substring(0, 8);
+// src/secure-token.js
 
-}
+export class TokenSecurity {
+    constructor(initialLimit) {
+        this.limit = initialLimit;
+        this.maxLimitLocked = false;
+    }
 
-// secure-token.js
-let maxLimitLocked = false;
+    // وظيفة تحديد وقفل السقف للأبد
+    setMaxSupply(limit) {
+        if (this.maxLimitLocked) {
+            throw new Error("⚠️ اختراق أمني: سقف العملة مغلق للأبد ولا يمكن فتحه!");
+        }
+        
+        this.limit = limit;
+        this.maxLimitLocked = true; // غلق الإمكانية للأبد (Finalize)
+        
+        // تجميد الكائن لمنع أي تغيير عبر الـ Memory injection
+        Object.freeze(this); 
+        
+        return ✅ تم تثبيت سقف العملة عند ${limit} وقفل التعديل نهائياً.;
+    }
 
-export function setMaxSupply(limit) {
-    if (maxLimitLocked) throw new Error("عفواً: سقف العملة مغلق للأبد ولا يمكن تعديله.");
-    
-    // حفظ السقف
-    this.limit = limit;
-    
-    // غلق الإمكانية للأبد (Finalize)
-    maxLimitLocked = true; 
-    return "تم تثبيت السقف بنجاح وقفل التعديل.";
+    // وظيفة للتحقق من الحالة
+    isLocked() {
+        return this.maxLimitLocked;
+    }
 }
