@@ -79,9 +79,36 @@ async function evaluateTokenWithAI() {
     alert(`تحليل AI لعملة ${name}: 
     السعر المقترح للطرح الأولي: ${initialPriceUSD.toFixed(4)} $
     ما يعادل: ${initialPriceEGP.toFixed(2)} جنيه مصري`);
+
+// database/main.js
+
+// 1. دالة معالجة الشراء التي سألت عنها
+async function purchaseTokenListing() {
+    const finalPriceUSD = document.getElementById('ai-price-usd').innerText;
+    const choice = confirm("هل تريد الدفع بالدولار (Stripe)؟ اضغط Cancel للدفع بالجنيه (Fawry)");
+    
+    if (choice) {
+        handleStripePayment(finalPriceUSD);
+    } else {
+        const finalPriceEGP = document.getElementById('ai-price-egp').innerText;
+        handleFawryPayment(finalPriceEGP);
+    }
+}
+
+// 2. الدوال المساعدة التي يجب أن تكون موجودة ليعمل الكود
+function handleStripePayment(amount) {
+    console.log("توجيه إلى Stripe لدفع: " + amount + " دولار");
+    // هنا نضع كود Stripe Checkout الذي كتبناه سابقاً
+}
+
+function handleFawryPayment(amount) {
+    console.log("توليد كود Fawry لدفع: " + amount + " جنيه");
+    // هنا نضع كود طلب رقم مرجعي من فوري
+}
     
     return initialPriceUSD;
 }
 
 app.whenReady().then(createWindow);
+
 
