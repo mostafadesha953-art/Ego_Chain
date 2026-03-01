@@ -68,4 +68,51 @@
     }
 </script>
 </body>
+
+<!-- user-portal.html -->
+<div class="wallet-container">
+    <div class="ego-logo">EGO Wallet</div>
+    
+    <div class="balance-card">
+        <h3>الرصيد المحلي (قيد التعدين)</h3>
+        <div id="localMined">0.00000000 EGO</div>
+        <p>سرعة الهاش الحالية: <span id="currentHash">--</span></p>
+    </div>
+
+    <div class="action-buttons">
+        <button onclick="startMining()">تشغيل التعدين (Mining)</button>
+        <button onclick="syncToNetwork()" style="background: #4ade80;">رفع العملات للعقد الذكي (Sync)</button>
+    </div>
+
+    <!-- قسم InstaPay -->
+    <div class="instapay-section" style="margin-top:20px; border:1px solid #38bdf8; padding:10px;">
+        <h4>الدفع عبر InstaPay</h4>
+        <p>حول 25 جنيه لـ: <strong>ego-chain@instapay</strong></p>
+        <input type="text" id="txnId" placeholder="رقم العملية (Reference ID)">
+        <button onclick="verifyInstaPay()">تأكيد التحويل</button>
+    </div>
+</div>
+
+<script>
+// منطق التعدين المحلي (قبل الرفع)
+let minedAmount = parseFloat(localStorage.getItem('mined')) || 0;
+
+function startMining() {
+    setInterval(() => {
+        // تطبيق قاعدة الـ 95% التي طلبتها
+        let currentTotal = 95000000; // مثال للعدد الكلي
+        let speed = (currentTotal >= 95000000) ? 0.0000005 : 0.00005; 
+        
+        minedAmount += (speed / 3600); // القيمة في الثانية
+        document.getElementById('localMined').innerText = minedAmount.toFixed(😎 + " EGO";
+        localStorage.setItem('mined', minedAmount);
+    }, 1000);
+}
+
+async function syncToNetwork() {
+    alert("يتم الآن دمج " + minedAmount.toFixed(😎 + " مع عقدك الذكي على EGO Chain...");
+    // هنا يتم استدعاء Firebase لرفع القيمة
+}
+</script>
+    
 </html>
