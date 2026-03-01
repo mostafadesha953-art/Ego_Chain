@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EGO Chain | منصة العقود الذكية</title>
+    <!-- استدعاء المكتبات الخارجية -->
     <script src="https://js.stripe.com"></script>
     <script src="https://www.paypal.com"></script>
+    
     <style>
-        :root { --main-cyan: #38bdf8; --bg-dark: #0f172a; --card-bg: #1e293b; }
+        :root { --main-cyan: #38bdf8; --bg-dark: #0f172a; --card-bg: #1e293b; --success: #4ade80; }
         body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; }
         
-        /* Logo EGO Chain */
         .header { padding: 40px; }
         .ego-logo { 
             font-size: 3rem; font-weight: 900; color: #fff; text-shadow: 0 0 15px var(--main-cyan);
@@ -18,15 +19,21 @@
         }
 
         .container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
-        .card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #334155; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #334155; display: flex; flex-direction: column; align-items: center; }
         
         button { 
             background: var(--main-cyan); color: #000; border: none; padding: 12px 25px; 
-            border-radius: 8px; font-weight: bold; cursor: pointer; margin: 5px; width: 100%;
+            border-radius: 8px; font-weight: bold; cursor: pointer; margin: 8px 0; width: 100%; transition: 0.3s;
         }
-        input { width: 90%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: none; }
+        button:hover { opacity: 0.8; transform: scale(1.02); }
+        .btn-ai { background: var(--success); }
         
-        #mining-stats { color: #4ade80; font-family: monospace; font-size: 1.2rem; }
+        input { width: 95%; padding: 12px; margin-bottom: 15px; border-radius: 5px; border: none; background: #0f172a; color: white; text-align: center; }
+        
+        .ai-pricing-box { background: rgba(56, 189, 248, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0; border: 1px dashed var(--main-cyan); width: 90%; }
+        .mining-display { color: var(--success); font-family: monospace; font-size: 1.3rem; margin: 10px 0; }
+        
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -36,62 +43,86 @@
 </div>
 
 <div class="container">
-    <!-- إنشاء العقد والدفع -->
+    <!-- القسم الأول: إنشاء العقد والدفع -->
     <div class="card">
         <h2>توليد عقد ذكي</h2>
-        <p>السعر: 0.5 دولار (أو ما يعادله بالجنيه)</p>
-        <input type="text" id="tokenName" placeholder="اسم العملة (مثلاً: MyToken)">
+        <p>السعر الأساسي: 0.5 دولار</p>
+        <input type="text" id="tokenName" placeholder="اسم العملة (مثلاً: EGO Gold)">
+        
+        <div class="ai-pricing-box">
+            <h4 style="color: var(--main-cyan); margin: 0;">💰 تقدير السعر الأولي (AI)</h4>
+            <div style="font-size: 1.8rem; margin: 10px 0;">
+                <span id="ai-price-usd">0.0500</span> <small>$</small> | 
+                <span id="ai-price-egp">2.50</span> <small>ج.م</small>
+            </div>
+            <p style="font-size: 0.7rem; color: #94a3b8;">* تحليل التشفير + الندرة 5%</p>
+            <button class="btn-ai" onclick="purchaseTokenListing()">شراء وتفعيل الطرح الأولي</button>
+        </div>
+
         <button onclick="payWithFawry()">دفع عبر Fawry (جنيه)</button>
         <button onclick="payWithInstapay()">دفع عبر InstaPay (جنيه)</button>
         <button onclick="payWithStripe()">بطاقة ائتمان (دولار)</button>
-        <div id="paypal-button-container"></div>
+        <div id="paypal-button-container" style="width: 100%; margin-top: 10px;"></div>
     </div>
-    <!-- أضف هذا الكود داخل بطاقة العقد الذكي في index.html -->
-<div class="ai-pricing-box" style="background: rgba(56, 189, 248, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
-    <h4 style="color: #38bdf8; margin: 0;">💰 تقدير السعر الأولي (بواسطة AI)</h4>
-    <div style="font-size: 1.8rem; margin: 10px 0;">
-        <span id="ai-price-usd">0.0000</span> <small>$</small> | 
-        <span id="ai-price-egp">0.00</span> <small>ج.م</small>
-    </div>
-    <p style="font-size: 0.8rem; color: #94a3b8;">* تم التحديد بناءً على قوة التشفير ونظام الندرة 5%</p>
-    
-    <button onclick="purchaseTokenListing()" style="background: #4ade80;">شراء وتفعيل الطرح الأولي</button>
-</div>
 
-<script>
-// تحديث السعر حياً عند تغيير الإعدادات
-function updateAIPricing() {
-    // محاكاة قراءة الخصائص من الواجهة
-    const features = 5; // عدد الخصائص المختارة
-    const isLocked = true; // هل السقف مغلق؟
-    
-    const price = AIPricingEngine.calculateInitialPrice('AES-256', features, isLocked);
-    
-    document.getElementById('ai-price-usd').innerText = price.usd;
-    document.getElementById('ai-price-egp').innerText = price.egp;
-}
-
-// تشغيل التحديث عند تحميل الصفحة
-window.onload = updateAIPricing;
-</script>
-
-    <!-- محرك التعدين والمحفظة -->
+    <!-- القسم الثاني: التعدين والمحفظة -->
     <div class="card">
         <h2>محفظة التعدين الذكية</h2>
         <div id="auth-section">
-            <input type="email" id="userEmail" placeholder="البريد الإلكتروني أو الهاتف">
+            <input type="text" id="userEmail" placeholder="البريد الإلكتروني أو الهاتف">
             <input type="password" id="userPass" placeholder="كلمة المرور">
             <button onclick="handleAuth()">دخول / إنشاء محفظة</button>
         </div>
-        <div id="mining-ui" style="display:none;">
-            <p>سرعة الـ HASH: <span id="hashRate">0.00</span></p>
-            <p>الرصيد المعدّن: <span id="minedBalance">0.00000000</span></p>
-            <button onclick="syncWithEgoChain()">رفع إلى شبكة EGO Chain</button>
+
+        <div id="mining-ui" class="hidden" style="display:none; width: 100%;">
+            <div class="card" style="background: #0f172a; width: 90%; margin: 10px 0;">
+                <p>سرعة الـ HASH الحالية:</p>
+                <div id="hashRate" class="mining-display">0.00000000</div>
+                <p>الرصيد المعدّن محلياً:</p>
+                <div id="minedBalance" class="mining-display">0.00000000</div>
+            </div>
+            <button onclick="startMiningProcess()">بدء التعدين ⛏️</button>
+            <button style="background: #8b5cf6; color: white;" onclick="syncWithEgoChain()">دمج ورفع العملات للشبكة</button>
         </div>
     </div>
 </div>
 
+<!-- استدعاء ملفات المنطق البرمجي -->
+<script src="../src/ai-pricing-engine.js" type="module"></script>
+<script src="../src/wallet-core.js" type="module"></script>
 <script src="main.js"></script>
+
+<script>
+// دالة تحديث السعر تلقائياً (AI Logic)
+function updateAIPricing() {
+    const basePrice = 0.5;
+    // معادلة بسيطة تحاكي الـ AI (قوة التشفير 9.8 + الندرة)
+    const finalUSD = (basePrice * 1.25).toFixed(4); 
+    const finalEGP = (finalUSD * 50).toFixed(2);
+
+    document.getElementById('ai-price-usd').innerText = finalUSD;
+    document.getElementById('ai-price-egp').innerText = finalEGP;
+}
+
+// دالة محاكاة الدخول
+function handleAuth() {
+    const email = document.getElementById('userEmail').value;
+    if(email) {
+        document.getElementById('auth-section').style.display = 'none';
+        document.getElementById('mining-ui').style.display = 'block';
+        updateAIPricing();
+    } else {
+        alert("يرجى إدخال البيانات");
+    }
+}
+
+async function purchaseTokenListing() {
+    const price = document.getElementById('ai-price-usd').innerText;
+    alert(سيتم توجيهك لدفع ${price}$ لتفعيل العقد على الشبكة);
+}
+
+window.onload = updateAIPricing;
+</script>
+
 </body>
 </html>
-
