@@ -98,7 +98,14 @@
     <button onclick="confirmInstaPay()" style="background:var(--success);">تأكيد</button>
     <button onclick="document.getElementById('instapay-modal').style.display='none'" style="background:none; color:red; border:none;">إلغاء</button>
 </div>
+    <!-- أضف هذا الكود في index.html -->
+    <script src="https://cdn.jsdelivr.net"></script>
 
+<div class="card" style="grid-column: span 2; min-height: 300px;">
+    <h3 style="color: var(--main-cyan);">📈 منحنى السعر والطلب (EGO Price Curve)</h3>
+    <canvas id="priceChart" style="max-height: 250px;"></canvas>
+    <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 10px;">* يرتفع السعر ديناميكياً كلما زاد التعدين وقل المعروض في السوق.</p>
+</div>
 <script>
 // --- محرك الندرة (Scarcity Engine) ---
 function updateScarcityMetrics(totalTaxAura, totalTaxJewel) {
@@ -139,3 +146,4 @@ window.onload = updateAIPricing;
 </script>
 </body>
 </html>
+
