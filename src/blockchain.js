@@ -1,49 +1,57 @@
-﻿const crypto = require('crypto');
+// src/blockchain.js - المحرك الرئيسي لشبكة EGO Chain
 
-class Transaction {
+export class Transaction {
     constructor(from, to, amount, signature, authMessage = null) {
         this.from = from;
         this.to = to;
         this.amount = amount;
-        this.signature = signature; // Private Key Signing
-        this.authMessage = authMessage; // "Trade/Buy" authorization
+        this.signature = signature; // التوقيع الرقمي بالمفتاح الخاص
+        this.authMessage = authMessage; // رسالة التوثيق (Trade/Buy)
         this.timestamp = Date.now();
     }
 }
 
-class Block {
+export class Block {
     constructor(timestamp, transactions, previousHash = '') {
         this.timestamp = timestamp;
         this.transactions = transactions;
         this.previousHash = previousHash;
-        this.hash = this.calculateHash();
         this.nonce = 0;
+        this.hash = ""; // سيتم حسابه لاحقاً
     }
 
-    calculateHash() {
-        return crypto.createHash('sha256')
-            .update(this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce)
-            .digest('hex');
+    // حساب الهاش باستخدام Web Crypto API المتوافقة مع المتصفحات
+    async calculateHash() {
+        const data = this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce;
+        const msgUint8 = new TextEncoder().encode(data);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     }
 }
 
-class EgoChain {
+export class EgoChain {
     constructor() {
-        this.chain = [this.createGenesisBlock()];
+        this.chain = [];
         this.pendingTransactions = [];
+        this.init();
     }
 
-    createGenesisBlock() {
-        return new Block(Date.now(), [], "0");
+    async init() {
+        const genesis = new Block(Date.now(), [], "0");
+        genesis.hash = await genesis.calculateHash();
+        this.chain.push(genesis);
     }
 
     getLatestBlock() {
         return this.chain[this.chain.length - 1];
     }
 
-    // ميزة رد الحقوق: Revert Transaction Logic
-    revertAssets(stolenFrom, currentHolder, amount, privateKey) {
-        // التحقق من وجود رسالة توثيق (Auth Message)
+    /**
+     * ميزة رد الحقوق (Revert Transaction Logic)
+     * إذا لم يوجد توثيق (Auth Message) يتم إعادة الأموال للمالك الأصلي تلقائياً
+     */
+    async revertAssets(stolenFrom, currentHolder, amount) {
         const hasAuth = this.chain.some(block => 
             block.transactions.some(tx => 
                 tx.from === stolenFrom && tx.to === currentHolder && tx.authMessage !== null
@@ -51,11 +59,12 @@ class EgoChain {
         );
 
         if (!hasAuth) {
-            console.log("ALERT: No Auth Message found. Reverting funds to original owner...");
-            this.addTransaction(new Transaction(currentHolder, stolenFrom, amount, 'SYSTEM_RECOVERY'));
+            console.warn("⚠️ تنبيه أمني: لا توجد رسالة توثيق. يتم استرداد الأموال للمالك الأصلي...");
+            this.addTransaction(new Transaction(currentHolder, stolenFrom, amount, 'SYSTEM_RECOVERY_REVERT'));
+            await this.minePendingTransactions();
             return true;
         }
-        console.log("Transaction is valid and authorized.");
+        console.log("✅ المعاملة موثقة وقانونية.");
         return false;
     }
 
@@ -63,26 +72,26 @@ class EgoChain {
         this.pendingTransactions.push(transaction);
     }
 
-    minePendingTransactions() {
+    async minePendingTransactions() {
         let block = new Block(Date.now(), this.pendingTransactions, this.getLatestBlock().hash);
-        block.hash = block.calculateHash();
+        block.hash = await block.calculateHash();
         this.chain.push(block);
         this.pendingTransactions = [];
+        return block;
     }
 }
 
-
-module.exports = { EgoChain, Transaction };
-
-// logic for AI Pricing
-async function estimateInitialPrice(encryptionStrength, featuresCount) {
-    // محاكاة منطق AI
-    let basePrice = 0.01; // سعر مبدئي بالسنت
+/**
+ * محرك تسعير الذكاء الاصطناعي (AI Pricing)
+ */
+export async function estimateInitialPrice(encryptionStrength, featuresCount) {
+    const basePrice = 0.01; // سعر مبدئي 1 سنت
+    // المعادلة: القوة التشفيرية (مثلاً 9.😎 + عدد المزايا
     let multiplier = (encryptionStrength * 0.5) + (featuresCount * 0.2);
     let finalPriceUSD = basePrice * multiplier;
     
     return {
         usd: finalPriceUSD.toFixed(4),
-        egp: (finalPriceUSD * 50).toFixed(2) // سعر افتراضي للصرف
+        egp: (finalPriceUSD * 50).toFixed(2) // التحويل للجنيه المصري
     };
 }
