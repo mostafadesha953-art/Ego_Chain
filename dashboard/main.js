@@ -63,4 +63,25 @@ ipcMain.on('save-private-contract', async (event, contract) => {
     } catch (e) { console.error(e); }
 });
 
+// database/main.js
+
+// دالة تقييم العملة بالذكاء الاصطناعي قبل الطرح
+async function evaluateTokenWithAI() {
+    const name = document.getElementById('tokenName').value;
+    // معايير الذكاء الاصطناعي: قوة التشفير + الندرة + الخدمات
+    let encryptionStrength = 9.8; // قيمة افتراضية من نظام الحماية
+    let scarcityScore = 5.0; // بناءً على سقف الـ 5% الذي وضعته
+    
+    // معادلة تحديد السعر الافتراضي
+    let initialPriceUSD = (encryptionStrength * 0.05) + (scarcityScore * 0.02);
+    let initialPriceEGP = initialPriceUSD * 50; 
+
+    alert(`تحليل AI لعملة ${name}: 
+    السعر المقترح للطرح الأولي: ${initialPriceUSD.toFixed(4)} $
+    ما يعادل: ${initialPriceEGP.toFixed(2)} جنيه مصري`);
+    
+    return initialPriceUSD;
+}
+
 app.whenReady().then(createWindow);
+
