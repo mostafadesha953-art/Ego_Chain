@@ -1,13 +1,12 @@
-// database/main.js - المحرك الموحد: ذكاء اصطناعي، دفع، ندرة، تضييق الهاش، ورسم بياني
+// database/main.js - المحرك الموحد: ذكاء اصطناعي، دفع، ندرة، تضييق الهاش، ورسم بياني + وضع الإدارة
 
-// --- 1. محرك الندرة والتسعير الديناميكي (بناءً على الطلب) ---
+// --- 1. محرك الندرة والتسعير الديناميكي ---
 const ScarcityLogic = {
     MAX_SUPPLY: 100000000,
-    BASE_PRICE: 0.5,        // السعر المبدئي
-    SCARCITY_FACTOR: 1.5,   // عامل نمو السعر مع الطلب
-    FLOOR_SPEED: 0.0000005, // السرعة الدنيا عند 95%
+    BASE_PRICE: 0.5,
+    SCARCITY_FACTOR: 1.5,
+    FLOOR_SPEED: 0.0000005,
 
-    // حساب السعر الديناميكي بناءً على الندرة والطلب
     calculateDynamicPrice(currentMined) {
         let demandRatio = currentMined / this.MAX_SUPPLY;
         let priceGrowth = Math.pow(demandRatio, this.SCARCITY_FACTOR);
@@ -19,11 +18,9 @@ const ScarcityLogic = {
         };
     },
 
-    // تحديث مقاييس Aura & Jewel والضرائب (2.5%) لزيادة القيمة
     updateMetricsUI(allTransactions = []) {
         let totalAuraTax = 0;
         let totalJewelTax = 0;
-
         allTransactions.forEach(tx => {
             if (tx.asset === "AURA") totalAuraTax += tx.tax || 0;
             if (tx.asset === "JEWEL") totalJewelTax += tx.tax || 0;
@@ -40,8 +37,12 @@ const ScarcityLogic = {
         }
     },
 
-    // بروتوكول تضييق الهاش للأجهزة الخارجية
     calculateAllowedHash(currentMined) {
+        // --- فحص وضع الإدارة (Admin Check) ---
+        if (localStorage.getItem('admin_mode') === 'true') {
+            return 100.0; // سرعة فائقة للمدير دون تضييق
+        }
+
         let percentage = (currentMined / this.MAX_SUPPLY) * 100;
         if (percentage >= 95) return this.FLOOR_SPEED;
         let steps = Math.floor(percentage / 5);
@@ -107,6 +108,12 @@ async function evaluateTokenWithAI() {
 
 // --- 4. معالجة عمليات الشراء والدفع ---
 async function purchaseTokenListing() {
+    // --- فحص وضع الإدارة (Admin Check) ---
+    if (localStorage.getItem('admin_mode') === 'true') {
+        alert("🛡️ وضع السيادة نشط: يتم توليد العقد مجاناً وتخطي بوابة الدفع.");
+        return console.log("Admin Bypass: Contract Generated Free.");
+    }
+
     const finalPriceUSD = document.getElementById('ai-price-usd').innerText;
     const finalPriceEGP = document.getElementById('ai-price-egp').innerText;
 
@@ -132,13 +139,16 @@ function handleFawryPayment(amount) {
 // --- 5. تحديث الواجهة والتحكم ---
 function updateMiningUI(minedTotal) {
     const allowed = ScarcityLogic.calculateAllowedHash(minedTotal);
-    document.getElementById('hashRate').innerText = allowed.toFixed(8);
-    document.getElementById('minedBalance').innerText = minedTotal.toFixed(8);
+    if(document.getElementById('hashRate')) document.getElementById('hashRate').innerText = allowed.toFixed(8);
+    if(document.getElementById('minedBalance')) document.getElementById('minedBalance').innerText = minedTotal.toFixed(8);
 }
 
-// تشغيل المحرك عند تحميل الصفحة
 window.onload = () => {
     console.log("EGO Chain Core: Active & Secure");
     initPriceChart();
-    ScarcityLogic.updateMetricsUI([{asset: "AURA", tax: 150}, {asset: "JEWEL", tax: 85}]);
+    // فحص إذا كان الداخل هو المدير لتغيير الثيم بصرياً
+    if(localStorage.getItem('admin_mode') === 'true') {
+        document.body.style.border = "5px solid #ef4444";
+        console.log("Sovereign Admin Access Granted");
+    }
 };
