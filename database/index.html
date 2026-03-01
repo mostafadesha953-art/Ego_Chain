@@ -32,6 +32,13 @@
         
         .ai-pricing-box { background: rgba(56, 189, 248, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0; border: 1px dashed var(--main-cyan); width: 90%; }
         .mining-display { color: var(--success); font-family: monospace; font-size: 1.3rem; margin: 10px 0; }
+
+        /* نافذة InstaPay Modal */
+        #instapay-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: #1e293b; padding: 25px; border: 2px solid var(--main-cyan);
+            border-radius: 15px; z-index: 1000; display: none; width: 300px;
+        }
         
         @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
     </style>
@@ -46,23 +53,27 @@
     <!-- القسم الأول: إنشاء العقد والدفع -->
     <div class="card">
         <h2>توليد عقد ذكي</h2>
-        <p>السعر الأساسي: 0.5 دولار</p>
+        <p>رسوم العقد الأساسية: 0.5 دولار</p>
         <input type="text" id="tokenName" placeholder="اسم العملة (مثلاً: EGO Gold)">
         
         <div class="ai-pricing-box">
             <h4 style="color: var(--main-cyan); margin: 0;">💰 تقدير السعر الأولي (AI)</h4>
             <div style="font-size: 1.8rem; margin: 10px 0;">
                 <span id="ai-price-usd">0.0500</span> <small>$</small> | 
-                <span id="ai-price-egp">2.50</span> <small>ج.م</small>
+                <span id="ai-price-egp">25.00</span> <small>ج.م</small>
             </div>
-            <p style="font-size: 0.7rem; color: #94a3b8;">* تحليل التشفير + الندرة 5%</p>
             <button class="btn-ai" onclick="purchaseTokenListing()">شراء وتفعيل الطرح الأولي</button>
         </div>
 
-        <button onclick="payWithFawry()">دفع عبر Fawry (جنيه)</button>
-        <button onclick="payWithInstapay()">دفع عبر InstaPay (جنيه)</button>
-        <button onclick="payWithStripe()">بطاقة ائتمان (دولار)</button>
-        <div id="paypal-button-container" style="width: 100%; margin-top: 10px;"></div>
+        <div style="width: 100%; border-top: 1px solid #334155; padding-top: 10px;">
+            <p style="font-size: 0.8rem; color: #94a3b8;">اختر وسيلة الدفع لتوليد العقد:</p>
+            <div style="display: flex; gap: 5px;">
+                <button onclick="payWithFawry()" style="background: #ffc107;">Fawry</button>
+                <button onclick="handleInstaPayDisplay()" style="background: #4a148c; color: white;">InstaPay</button>
+            </div>
+            <button onclick="payWithStripe()" style="background: #6366f1; color: white;">بطاقة ائتمان (Stripe)</button>
+            <div id="paypal-button-container" style="margin-top: 10px;"></div>
+        </div>
     </div>
 
     <!-- القسم الثاني: التعدين والمحفظة -->
@@ -74,7 +85,7 @@
             <button onclick="handleAuth()">دخول / إنشاء محفظة</button>
         </div>
 
-        <div id="mining-ui" class="hidden" style="display:none; width: 100%;">
+        <div id="mining-ui" style="display:none; width: 100%;">
             <div class="card" style="background: #0f172a; width: 90%; margin: 10px 0;">
                 <p>سرعة الـ HASH الحالية:</p>
                 <div id="hashRate" class="mining-display">0.00000000</div>
@@ -87,39 +98,58 @@
     </div>
 </div>
 
-<!-- استدعاء ملفات المنطق البرمجي -->
-<script src="../src/ai-pricing-engine.js" type="module"></script>
-<script src="../src/wallet-core.js" type="module"></script>
-<script src="main.js"></script>
+<!-- نافذة InstaPay المنبثقة -->
+<div id="instapay-modal">
+    <h4>تحويل InstaPay</h4>
+    <p style="font-size: 0.8rem;">حول 25 ج.م للعنوان التالي:</p>
+    <div style="background: #0f172a; padding: 10px; color: var(--main-cyan); font-weight: bold; border-radius: 5px; margin-bottom: 10px;">ego-chain@instapay</div>
+    <input type="text" id="instaRef" placeholder="رقم العملية (Ref ID)" style="font-size: 0.8rem;">
+    <button onclick="confirmInstaPay()" style="background: var(--success);">تأكيد الإرسال</button>
+    <button onclick="document.getElementById('instapay-modal').style.display='none'" style="background: none; color: #ef4444; border: none; font-size: 0.8rem;">إلغاء</button>
+</div>
 
 <script>
-// دالة تحديث السعر تلقائياً (AI Logic)
+// --- منطق الدفع والذكاء الاصطناعي ---
 function updateAIPricing() {
     const basePrice = 0.5;
-    // معادلة بسيطة تحاكي الـ AI (قوة التشفير 9.8 + الندرة)
     const finalUSD = (basePrice * 1.25).toFixed(4); 
-    const finalEGP = (finalUSD * 50).toFixed(2);
+    const finalEGP = 25.00; // السعر الثابت الذي حددته
 
     document.getElementById('ai-price-usd').innerText = finalUSD;
-    document.getElementById('ai-price-egp').innerText = finalEGP;
+    document.getElementById('ai-price-egp').innerText = finalEGP.toFixed(2);
 }
 
-// دالة محاكاة الدخول
+function handleInstaPayDisplay() {
+    document.getElementById('instapay-modal').style.display = 'block';
+}
+
+function confirmInstaPay() {
+    const ref = document.getElementById('instaRef').value;
+    if(ref) {
+        alert("تم استلام طلبك. سيتم تفعيل العقد فور مراجعة العملية: " + ref);
+        document.getElementById('instapay-modal').style.display = 'none';
+    } else {
+        alert("يرجى إدخال رقم مرجع العملية");
+    }
+}
+
+// --- منطق الدخول والتعدين ---
 function handleAuth() {
     const email = document.getElementById('userEmail').value;
     if(email) {
         document.getElementById('auth-section').style.display = 'none';
         document.getElementById('mining-ui').style.display = 'block';
         updateAIPricing();
-    } else {
-        alert("يرجى إدخال البيانات");
     }
 }
 
 async function purchaseTokenListing() {
     const price = document.getElementById('ai-price-usd').innerText;
-    alert(سيتم توجيهك لدفع ${price}$ لتفعيل العقد على الشبكة);
+    alert(سيتم فتح بوابة الدفع لتفعيل العقد بمبلغ ${price}$);
 }
+
+function payWithStripe() { alert("جاري الاتصال بـ Stripe..."); }
+function payWithFawry() { alert("جاري توليد كود فوري بمبلغ 25 ج.م..."); }
 
 window.onload = updateAIPricing;
 </script>
