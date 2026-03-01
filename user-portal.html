@@ -157,8 +157,43 @@ async function triggerPermanentLock() {
     }
 }
 </script>
+
+    <!-- user-portal.html -->
+<div class="auth-box">
+    <h3>تسجيل الدخول للهوية الرقمية</h3>
+    <input type="text" id="loginId" placeholder="الإيميل أو رقم الهاتف">
+    <input type="password" id="loginPass" placeholder="كلمة المرور">
+    <button onclick="handleLogin()">دخول وإنشاء محفظة</button>
+</div>
+
+<div id="wallet-ui" style="display:none; margin-top:20px;">
+    <div class="balance-display">
+        رصيدك في الشبكة: <span id="netBalance">0.00</span> EGO
+    </div>
+    <div class="mining-display">
+        تعدين جارٍ (محلي): <span id="localMined">0.00000000</span>
+    </div>
+    <button onclick="EgoWallet.syncMinedToNetwork()">رفع العملات للشبكة (Sync)</button>
+</div>
+
+<script>
+async function handleLogin() {
+    const id = document.getElementById('loginId').value;
+    const pass = document.getElementById('loginPass').value;
+    
+    // محاكاة الدخول عبر Firebase Auth
+    try {
+        // بعد الدخول بنجاح:
+        document.getElementById('auth-box').style.display = 'none';
+        document.getElementById('wallet-ui').style.display = 'block';
+        // استدعاء إنشاء المحفظة
+        EgoWallet.createWallet("USER_UID", { identifier: id });
+    } catch(e) { alert("خطأ في الدخول"); }
+}
+</script>
     
 </html>
+
 
 
 
