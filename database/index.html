@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EGO Chain | منصة العقود الذكية</title>
+    <script src="https://js.stripe.com"></script>
+    <script src="https://www.paypal.com"></script>
+    <style>
+        :root { --main-cyan: #38bdf8; --bg-dark: #0f172a; --card-bg: #1e293b; }
+        body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; }
+        
+        /* Logo EGO Chain */
+        .header { padding: 40px; }
+        .ego-logo { 
+            font-size: 3rem; font-weight: 900; color: #fff; text-shadow: 0 0 15px var(--main-cyan);
+            border: 3px solid var(--main-cyan); padding: 10px 40px; border-radius: 50px; display: inline-block;
+        }
+
+        .container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 15px; border: 1px solid #334155; }
+        
+        button { 
+            background: var(--main-cyan); color: #000; border: none; padding: 12px 25px; 
+            border-radius: 8px; font-weight: bold; cursor: pointer; margin: 5px; width: 100%;
+        }
+        input { width: 90%; padding: 10px; margin-bottom: 15px; border-radius: 5px; border: none; }
+        
+        #mining-stats { color: #4ade80; font-family: monospace; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="ego-logo">EGO Chain</div>
+</div>
+
+<div class="container">
+    <!-- إنشاء العقد والدفع -->
+    <div class="card">
+        <h2>توليد عقد ذكي</h2>
+        <p>السعر: 0.5 دولار (أو ما يعادله بالجنيه)</p>
+        <input type="text" id="tokenName" placeholder="اسم العملة (مثلاً: MyToken)">
+        <button onclick="payWithFawry()">دفع عبر Fawry (جنيه)</button>
+        <button onclick="payWithInstapay()">دفع عبر InstaPay (جنيه)</button>
+        <button onclick="payWithStripe()">بطاقة ائتمان (دولار)</button>
+        <div id="paypal-button-container"></div>
+    </div>
+
+    <!-- محرك التعدين والمحفظة -->
+    <div class="card">
+        <h2>محفظة التعدين الذكية</h2>
+        <div id="auth-section">
+            <input type="email" id="userEmail" placeholder="البريد الإلكتروني أو الهاتف">
+            <input type="password" id="userPass" placeholder="كلمة المرور">
+            <button onclick="handleAuth()">دخول / إنشاء محفظة</button>
+        </div>
+        <div id="mining-ui" style="display:none;">
+            <p>سرعة الـ HASH: <span id="hashRate">0.00</span></p>
+            <p>الرصيد المعدّن: <span id="minedBalance">0.00000000</span></p>
+            <button onclick="syncWithEgoChain()">رفع إلى شبكة EGO Chain</button>
+        </div>
+    </div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
