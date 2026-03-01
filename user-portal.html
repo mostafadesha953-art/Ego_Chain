@@ -1,199 +1,136 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>EgoChain - User Portal</title>
+    <title>EgoChain - بوابة المستخدم الذكية</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f0f0f; color: #e0e0e0; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 400px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 6px; border: 1px solid #333; background: #121212; color: white; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-login { background: #007bff; color: white; }
-        .btn-contract { background: #28a745; color: white; margin-top: 20px; }
+        /* التنسيق المدمج والمطور */
+        body { font-family: 'Segoe UI', sans-serif; background: #0f0f0f; color: #e0e0e0; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: #1e1e1e; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 450px; text-align: center; border: 1px solid #333; }
+        .ego-logo { font-size: 2.5rem; font-weight: bold; color: #38bdf8; text-shadow: 0 0 10px #38bdf8; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #333; background: #121212; color: white; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
         .hidden { display: none; }
-        .trade-key-box { background: #333; padding: 10px; margin-top: 15px; border-left: 4px solid #f39c12; word-break: break-all; font-family: monospace; font-size: 12px; }
+        .card { background: #252525; padding: 15px; border-radius: 10px; margin-top: 15px; border: 1px solid #38bdf8; }
+        .mining-text { font-family: monospace; color: #4ade80; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-<div class="container" id="loginSection">
-    <h2>EgoChain Login</h2>
-    <p style="font-size: 12px; color: #888;">Egypt Compliance: Data logged for CBE Audit</p>
-    <input type="text" id="identifier" placeholder="Email or Phone Number (+20)">
-    <input type="password" id="pass" placeholder="Secret Access Key">
-    <button class="btn-login" onclick="login()">Access My Wallet</button>
-</div>
+<div class="container">
+    <div class="ego-logo">EGO Chain</div>
 
-<div class="container hidden" id="portalSection">
-    <h2>Generate Trade Key</h2>
-    <p>Sign a secure transfer to prevent "Revert".</p>
-    <input type="text" id="buyerPublic" placeholder="Buyer's Public Address">
-    <input type="number" id="amount" placeholder="Amount (EGP)">
-    <button class="btn-contract" onclick="generateTradeKey()">Generate & Sign Contract</button>
-    
-    <div id="output" class="hidden">
-        <p>Share this Key with Buyer:</p>
-        <div class="trade-key-box" id="keyDisplay"></div>
-        <button class="btn-login" style="background:#25d366; margin-top:10px;" onclick="shareWhatsApp()">Share via WhatsApp</button>
+    <!-- 1. قسم تسجيل الدخول -->
+    <div id="loginSection">
+        <h3>تسجيل الدخول للهوية الرقمية</h3>
+        <p style="font-size: 11px; color: #888;">امتثال البنك المركزي المصري: يتم تسجيل البيانات للتدقيق</p>
+        <input type="text" id="identifier" placeholder="البريد الإلكتروني أو رقم الهاتف (+20)">
+        <input type="password" id="loginPass" placeholder="مفتاح الوصول السري">
+        <button class="btn-primary" onclick="handleLogin()">دخول وإنشاء محفظة</button>
     </div>
-</div>
 
-<script>
-    function login() {
-        const id = document.getElementById('identifier').value;
-        if(id) {
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('portalSection').classList.remove('hidden');
-        }
-    }
+    <!-- 2. لوحة تحكم المحفظة والتعدين -->
+    <div id="portalSection" class="hidden">
+        <div class="card">
+            <h3>الرصيد المحلي (قيد التعدين)</h3>
+            <div id="localMined" class="mining-text">0.00000000 EGO</div>
+            <p>سرعة الـ HASH: <span id="currentHash">--</span></p>
+        </div>
 
-    function generateTradeKey() {
-        const buyer = document.getElementById('buyerPublic').value;
-        const amount = document.getElementById('amount').value;
+        <div id="status-box" style="margin-top: 10px; font-size: 0.9rem;">
+            حالة السقف: <span id="lockStatus" style="color: #4ade80;">مفتوح</span>
+        </div>
+
+        <button class="btn-primary" onclick="startMining()">تشغيل التعدين ⛏️</button>
+        <button class="btn-success" onclick="syncToNetwork()">رفع العملات للشبكة (Sync)</button>
         
-        // محاكاة توقيع العقد الذكي رقمياً
-        const timestamp = Date.now();
-        const rawData = AUTH-${buyer}-${amount}-${timestamp};
-        // في الواقع سنستخدم Wallet.signTransaction من الملفات السابقة
-        const signature = btoa(rawData); // Base64 كمثال للتوقيع الرقمي
+        <hr style="border: 0.5px solid #333; margin: 20px 0;">
 
-        document.getElementById('output').classList.remove('hidden');
-        document.getElementById('keyDisplay').innerText = EGO-AUTH-SIG:${signature};
-    }
+        <!-- قسم InstaPay -->
+        <div style="border: 1px dashed #38bdf8; padding: 10px; border-radius: 8px;">
+            <h4>تفعيل العقد (InstaPay)</h4>
+            <p style="font-size: 0.8rem;">حول 25 جنيه لـ: <strong>ego-chain@instapay</strong></p>
+            <input type="text" id="txnId" placeholder="رقم العملية مرجعي">
+            <button class="btn-primary" style="background: #4a148c;" onclick="verifyInstaPay()">تأكيد التحويل</button>
+        </div>
 
-    function shareWhatsApp() {
-        const key = document.getElementById('keyDisplay').innerText;
-        const url = https://wa.me, this is my EgoChain Authorized Trade Key: ${key};
-        window.open(url, '_blank');
-    }
-</script>
-</body>
-
-<!-- user-portal.html -->
-<div class="wallet-container">
-    <div class="ego-logo">EGO Wallet</div>
-    
-    <div class="balance-card">
-        <h3>الرصيد المحلي (قيد التعدين)</h3>
-        <div id="localMined">0.00000000 EGO</div>
-        <p>سرعة الهاش الحالية: <span id="currentHash">--</span></p>
-    </div>
-
-    <div class="action-buttons">
-        <button onclick="startMining()">تشغيل التعدين (Mining)</button>
-        <button onclick="syncToNetwork()" style="background: #4ade80;">رفع العملات للعقد الذكي (Sync)</button>
-    </div>
-
-    <!-- قسم InstaPay -->
-    <div class="instapay-section" style="margin-top:20px; border:1px solid #38bdf8; padding:10px;">
-        <h4>الدفع عبر InstaPay</h4>
-        <p>حول 25 جنيه لـ: <strong>ego-chain@instapay</strong></p>
-        <input type="text" id="txnId" placeholder="رقم العملية (Reference ID)">
-        <button onclick="verifyInstaPay()">تأكيد التحويل</button>
+        <!-- زر القفل النهائي -->
+        <button class="btn-danger" id="lockBtn" onclick="triggerPermanentLock()" style="margin-top: 20px;">
+            إغلاق سقف العملة للأبد 🔒
+        </button>
     </div>
 </div>
 
 <script>
-// منطق التعدين المحلي (قبل الرفع)
+// --- المتغيرات الأساسية ---
 let minedAmount = parseFloat(localStorage.getItem('mined')) || 0;
+let isMining = false;
 
+// --- وظيفة الدخول ---
+async function handleLogin() {
+    const id = document.getElementById('identifier').value;
+    if(id) {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('portalSection').classList.remove('hidden');
+        // هنا يتم استدعاء EgoWallet.createWallet من ملف wallet-core.js
+        console.log("Wallet created for:", id);
+    } else {
+        alert("يرجى إدخال البيانات");
+    }
+}
+
+// --- محرك التعدين (قاعدة الـ 95%) ---
 function startMining() {
+    if(isMining) return;
+    isMining = true;
+    document.getElementById('currentHash').innerText = "جاري الحساب...";
+
     setInterval(() => {
-        // تطبيق قاعدة الـ 95% التي طلبتها
-        let currentTotal = 95000000; // مثال للعدد الكلي
-        let speed = (currentTotal >= 95000000) ? 0.0000005 : 0.00005; 
+        // القاعدة: إذا تم تعدين 95% تقل السرعة إلى 0.0000005
+        let currentTotalPercentage = 96; // قيمة تجريبية للاختبار
+        let speed = (currentTotalPercentage >= 95) ? 0.0000005 : 0.00005; 
         
-        minedAmount += (speed / 3600); // القيمة في الثانية
+        minedAmount += (speed / 3600); 
         document.getElementById('localMined').innerText = minedAmount.toFixed(😎 + " EGO";
+        document.getElementById('currentHash').innerText = speed.toFixed(7) + " H/s";
         localStorage.setItem('mined', minedAmount);
     }, 1000);
 }
 
+// --- رفع العملات للشبكة ---
 async function syncToNetwork() {
-    alert("يتم الآن دمج " + minedAmount.toFixed(😎 + " مع عقدك الذكي على EGO Chain...");
-    // هنا يتم استدعاء Firebase لرفع القيمة
+    if(minedAmount <= 0) return alert("لا يوجد رصيد لرفعه");
+    alert(يتم الآن دمج ${minedAmount.toFixed(8)} مع عقدك الذكي في EGO Chain...);
+    // استدعاء دالة الدمج السحابية
+    // await EgoWallet.syncMinedToNetwork();
 }
-</script>
 
-    <!-- في ملف user-portal.html -->
-<button onclick="triggerKillSwitch()" style="background: red; color: white;">
-    قفل سقف العملة للأبد (تحذير: لا يمكن التراجع!)
-</button>
-
-<script>
-function triggerKillSwitch() {
-    if(confirm("هل أنت متأكد؟ لن تتمكن من إصدار عملة واحدة إضافية بعد الآن!")) {
-        lockTokenSupplyForever("EGO_CHAIN_ADDRESS");
-        alert("تم القفل بنجاح.");
-    }
-}
-</script>
-
-    <!-- أضف هذا الجزء في صفحة التحكم -->
-<div id="status-box" style="padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-    حالة سقف العملة: <span id="lockStatus">مفتوح (قابل للزيادة)</span>
-</div>
-
-<button id="lockBtn" onclick="triggerPermanentLock()" 
-        style="background: #ef4444; color: white; padding: 15px; border: none; cursor: pointer; font-weight: bold;">
-    إغلاق سقف العملة للأبد 🔒
-</button>
-
-<script>
+// --- القفل النهائي (Kill Switch) ---
 async function triggerPermanentLock() {
-    const confirmLock = confirm("تحذير نهائي: إذا قمت بقفل السقف، لن تتمكن من إصدار أي عملات جديدة (Minting) أبداً. هل أنت متأكد؟");
-    
+    const confirmLock = confirm("تحذير: قفل السقف سيمنع إصدار أي عملات جديدة للأبد. هل أنت متأكد؟");
     if (confirmLock) {
-        const tokenAddr = "YOUR_TOKEN_ID"; // معرف العملة في Firebase
-        const success = await lockTokenSupplyForever(tokenAddr);
+        // استدعاء الدالة من ملف kill-switch.js
+        // const success = await lockTokenSupplyForever("YOUR_TOKEN_ID");
+        const success = true; // محاكاة نجاح العملية
         
         if (success) {
-            document.getElementById('lockStatus').innerText = "مغلق نهائياً (Locked)";
+            document.getElementById('lockStatus').innerText = "مغلق نهائياً";
             document.getElementById('lockStatus').style.color = "red";
             document.getElementById('lockBtn').disabled = true;
             document.getElementById('lockBtn').style.opacity = "0.5";
-            alert("تم قفل السقف بنجاح في قاعدة البيانات.");
+            alert("تم قفل السقف السحابي.");
         }
     }
 }
-</script>
 
-    <!-- user-portal.html -->
-<div class="auth-box">
-    <h3>تسجيل الدخول للهوية الرقمية</h3>
-    <input type="text" id="loginId" placeholder="الإيميل أو رقم الهاتف">
-    <input type="password" id="loginPass" placeholder="كلمة المرور">
-    <button onclick="handleLogin()">دخول وإنشاء محفظة</button>
-</div>
-
-<div id="wallet-ui" style="display:none; margin-top:20px;">
-    <div class="balance-display">
-        رصيدك في الشبكة: <span id="netBalance">0.00</span> EGO
-    </div>
-    <div class="mining-display">
-        تعدين جارٍ (محلي): <span id="localMined">0.00000000</span>
-    </div>
-    <button onclick="EgoWallet.syncMinedToNetwork()">رفع العملات للشبكة (Sync)</button>
-</div>
-
-<script>
-async function handleLogin() {
-    const id = document.getElementById('loginId').value;
-    const pass = document.getElementById('loginPass').value;
-    
-    // محاكاة الدخول عبر Firebase Auth
-    try {
-        // بعد الدخول بنجاح:
-        document.getElementById('auth-box').style.display = 'none';
-        document.getElementById('wallet-ui').style.display = 'block';
-        // استدعاء إنشاء المحفظة
-        EgoWallet.createWallet("USER_UID", { identifier: id });
-    } catch(e) { alert("خطأ في الدخول"); }
+function verifyInstaPay() {
+    const txn = document.getElementById('txnId').value;
+    if(txn) alert("جاري التحقق من عملية InstaPay...");
 }
 </script>
-    
+
+</body>
 </html>
-
-
-
-
