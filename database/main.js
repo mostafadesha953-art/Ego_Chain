@@ -1,19 +1,56 @@
-// database/main.js - المحرك الرئيسي للواجهة والدفع والذكاء الاصطناعي
+// database/main.js - المحرك الموحد: ذكاء اصطناعي، دفع، ندرة، وتحكم في الهاش
 
-// 1. محرك تقييم العملة بالذكاء الاصطناعي (AI Pricing)
+// --- 1. محرك الندرة وتضييق الهاش (دمج scarcity-engine) ---
+const ScarcityLogic = {
+    MAX_SUPPLY: 100000000,
+    FLOOR_SPEED: 0.0000005,
+
+    // حساب مقاييس Aura & Jewel والضرائب (2.5%) لزيادة القيمة
+    updateMetricsUI(allTransactions = []) {
+        let totalAuraTax = 0;
+        let totalJewelTax = 0;
+
+        allTransactions.forEach(tx => {
+            if (tx.asset === "AURA") totalAuraTax += tx.tax || 0;
+            if (tx.asset === "JEWEL") totalJewelTax += tx.tax || 0;
+        });
+
+        const auraBoost = (totalAuraTax * 0.05).toFixed(2);
+        const jewelBoost = (totalJewelTax * 0.03).toFixed(2);
+
+        if(document.getElementById('aura-val')) {
+            document.getElementById('aura-val').innerText = totalAuraTax.toFixed(2);
+            document.getElementById('aura-boost').innerText = auraBoost + "%";
+            document.getElementById('jewel-val').innerText = totalJewelTax.toFixed(2);
+            document.getElementById('jewel-boost').innerText = jewelBoost + "%";
+        }
+    },
+
+    // بروتوكول تضييق الهاش للأجهزة الخارجية بناءً على نسبة الـ 95%
+    calculateAllowedHash(currentMined) {
+        let percentage = (currentMined / this.MAX_SUPPLY) * 100;
+        
+        // التضييق الأقصى عند 95% كما طلبت
+        if (percentage >= 95) return this.FLOOR_SPEED;
+
+        // التضييق التدريجي كل 5% (تقليل 20% في كل مرحلة)
+        let baseRate = 1.0;
+        let steps = Math.floor(percentage / 5);
+        return baseRate * Math.pow(0.8, steps);
+    }
+};
+
+// --- 2. محرك تقييم العملة بالذكاء الاصطناعي (AI Pricing) ---
 async function evaluateTokenWithAI() {
     const name = document.getElementById('tokenName').value;
     if (!name) return alert("يرجى إدخال اسم العملة أولاً");
 
-    // المعايير التي حددتها (التشفير 9.8 + الندرة 5)
     const encryptionStrength = 9.8; 
     const scarcityScore = 5.0; 
     
-    // معادلة السعر المبدئي
     let initialPriceUSD = (encryptionStrength * 0.05) + (scarcityScore * 0.02);
-    let initialPriceEGP = initialPriceUSD * 50; 
+    let initialPriceEGP = 25.00; // السعر الثابت بالجنيه الذي حددته
 
-    // تحديث الأرقام في الواجهة (لزر الشراء)
     document.getElementById('ai-price-usd').innerText = initialPriceUSD.toFixed(4);
     document.getElementById('ai-price-egp').innerText = initialPriceEGP.toFixed(2);
 
@@ -24,15 +61,12 @@ async function evaluateTokenWithAI() {
     return initialPriceUSD;
 }
 
-// 2. معالجة عملية الشراء (Stripe & Fawry)
+// --- 3. معالجة عمليات الشراء والدفع ---
 async function purchaseTokenListing() {
     const finalPriceUSD = document.getElementById('ai-price-usd').innerText;
     const finalPriceEGP = document.getElementById('ai-price-egp').innerText;
 
-    if (finalPriceUSD === "0.0000") {
-        alert("يرجى الضغط على زر التقييم بالذكاء الاصطناعي أولاً");
-        return;
-    }
+    if (finalPriceUSD === "0.0000") return alert("يرجى تقييم العملة بالـ AI أولاً");
 
     const choice = confirm("💳 دفع دولي (Stripe)؟ \nإلغاء للدفع المحلي (Fawry/InstaPay)");
     
@@ -43,32 +77,27 @@ async function purchaseTokenListing() {
     }
 }
 
-// 3. الدوال المساعدة للدفع
 function handleStripePayment(amount) {
-    console.log(🚀 توجيه لـ Stripe لدفع: ${amount}$);
-    // هنا يتم استدعاء Netlify Function لفتح Stripe Checkout
-    alert("سيتم فتح بوابة Stripe لدفع " + amount + " دولار");
+    console.log(🚀 Stripe Redirect: ${amount}$);
+    alert(سيتم فتح بوابة Stripe الآمنة لدفع ${amount} دولار);
 }
 
 function handleFawryPayment(amount) {
-    console.log(🇪🇬 توليد كود Fawry بمبلغ: ${amount} جنيه);
     const fawryRef = Math.floor(Math.random() * 1000000000);
-    alert(برجاء التوجه لأقرب منفذ فوري واستخدام الرقم المرجعي: ${fawryRef} \nالمبلغ: ${amount} ج.م);
+    alert(توجه لأقرب منفذ فوري واستخدم الرقم المرجعي: ${fawryRef} \nالمبلغ: ${amount} ج.م);
 }
 
-// 4. دمج وحفظ العقد (منطق الـ Electron المحول للسحابة)
-async function saveContractToCloud(contractData) {
-    try {
-        console.log("🔒 جاري تشفير العقد وحفظه في سجل المستخدم...");
-        // استدعاء دالة المزامنة التي كتبناها سابقاً (sync.js)
-        // await sync(contractData); 
-        alert("تم حفظ العقد وتشفيره بنجاح في شبكة EGO Chain");
-    } catch (e) {
-        console.error("خطأ في الحفظ:", e);
-    }
+// --- 4. وظائف التعدين والتحكم في الأجهزة ---
+function updateMiningDisplay(minedTotal) {
+    const allowed = ScarcityLogic.calculateAllowedHash(minedTotal);
+    document.getElementById('hashRate').innerText = allowed.toFixed(8);
+    document.getElementById('minedBalance').innerText = minedTotal.toFixed(8);
 }
 
-// ربط الأزرار عند تحميل الصفحة
+// تشغيل المحرك عند تحميل الصفحة
 window.onload = () => {
-    console.log("EGO Chain Core Loaded");
+    console.log("EGO Chain Core: Active & Secure");
+    updateAIPricing(); // تحديث أولي للأسعار
+    // محاكاة تحديث الندرة لعملات Aura & Jewel (بيانات تجريبية)
+    ScarcityLogic.updateMetricsUI([{asset: "AURA", tax: 150}, {asset: "JEWEL", tax: 85}]);
 };
