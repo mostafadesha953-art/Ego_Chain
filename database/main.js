@@ -1,11 +1,25 @@
-// database/main.js - المحرك الموحد: ذكاء اصطناعي، دفع، ندرة، وتحكم في الهاش
+// database/main.js - المحرك الموحد: ذكاء اصطناعي، دفع، ندرة، تضييق الهاش، ورسم بياني
 
-// --- 1. محرك الندرة وتضييق الهاش (دمج scarcity-engine) ---
+// --- 1. محرك الندرة والتسعير الديناميكي (بناءً على الطلب) ---
 const ScarcityLogic = {
     MAX_SUPPLY: 100000000,
-    FLOOR_SPEED: 0.0000005,
+    BASE_PRICE: 0.5,        // السعر المبدئي
+    SCARCITY_FACTOR: 1.5,   // عامل نمو السعر مع الطلب
+    FLOOR_SPEED: 0.0000005, // السرعة الدنيا عند 95%
 
-    // حساب مقاييس Aura & Jewel والضرائب (2.5%) لزيادة القيمة
+    // حساب السعر الديناميكي بناءً على الندرة والطلب
+    calculateDynamicPrice(currentMined) {
+        let demandRatio = currentMined / this.MAX_SUPPLY;
+        let priceGrowth = Math.pow(demandRatio, this.SCARCITY_FACTOR);
+        let dynamicPrice = this.BASE_PRICE * (1 + priceGrowth);
+        
+        return {
+            usd: dynamicPrice.toFixed(4),
+            egp: (dynamicPrice * 50).toFixed(2)
+        };
+    },
+
+    // تحديث مقاييس Aura & Jewel والضرائب (2.5%) لزيادة القيمة
     updateMetricsUI(allTransactions = []) {
         let totalAuraTax = 0;
         let totalJewelTax = 0;
@@ -26,42 +40,72 @@ const ScarcityLogic = {
         }
     },
 
-    // بروتوكول تضييق الهاش للأجهزة الخارجية بناءً على نسبة الـ 95%
+    // بروتوكول تضييق الهاش للأجهزة الخارجية
     calculateAllowedHash(currentMined) {
         let percentage = (currentMined / this.MAX_SUPPLY) * 100;
-        
-        // التضييق الأقصى عند 95% كما طلبت
         if (percentage >= 95) return this.FLOOR_SPEED;
-
-        // التضييق التدريجي كل 5% (تقليل 20% في كل مرحلة)
-        let baseRate = 1.0;
         let steps = Math.floor(percentage / 5);
-        return baseRate * Math.pow(0.8, steps);
+        return 1.0 * Math.pow(0.8, steps);
     }
 };
 
-// --- 2. محرك تقييم العملة بالذكاء الاصطناعي (AI Pricing) ---
+// --- 2. محرك الرسم البياني (Price Chart) ---
+let priceChart;
+function initPriceChart() {
+    const ctx = document.getElementById('priceChart').getContext('2d');
+    const labels = ['0%', '20%', '40%', '60%', '80%', '95%', '100%'];
+    const dataPoints = labels.map(label => {
+        let percentage = parseInt(label) / 100;
+        let price = ScarcityLogic.BASE_PRICE * (1 + Math.pow(percentage, ScarcityLogic.SCARCITY_FACTOR));
+        return price.toFixed(4);
+    });
+
+    priceChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'سعر العقد ($)',
+                data: dataPoints,
+                borderColor: '#38bdf8',
+                backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { 
+                y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+            }
+        }
+    });
+}
+
+// --- 3. محرك تقييم العملة بالذكاء الاصطناعي (AI Pricing) ---
 async function evaluateTokenWithAI() {
     const name = document.getElementById('tokenName').value;
     if (!name) return alert("يرجى إدخال اسم العملة أولاً");
 
-    const encryptionStrength = 9.8; 
-    const scarcityScore = 5.0; 
-    
-    let initialPriceUSD = (encryptionStrength * 0.05) + (scarcityScore * 0.02);
-    let initialPriceEGP = 25.00; // السعر الثابت بالجنيه الذي حددته
+    let currentMined = parseFloat(localStorage.getItem('mined')) || 0;
+    let marketPrice = ScarcityLogic.calculateDynamicPrice(currentMined);
 
-    document.getElementById('ai-price-usd').innerText = initialPriceUSD.toFixed(4);
-    document.getElementById('ai-price-egp').innerText = initialPriceEGP.toFixed(2);
+    const encryptionStrength = 9.8; 
+    let finalUSD = parseFloat(marketPrice.usd) + (encryptionStrength * 0.01);
+    let finalEGP = finalUSD * 50;
+
+    document.getElementById('ai-price-usd').innerText = finalUSD.toFixed(4);
+    document.getElementById('ai-price-egp').innerText = finalEGP.toFixed(2);
 
     alert(✅ تحليل AI لعملة ${name} اكتمل:\n +
-          السعر المقترح: ${initialPriceUSD.toFixed(4)} $ \n +
-          ما يعادل: ${initialPriceEGP.toFixed(2)} ج.م);
-    
-    return initialPriceUSD;
+          السعر الحالي بناءً على الطلب: ${finalUSD.toFixed(4)} $ \n +
+          ما يعادل: ${finalEGP.toFixed(2)} ج.م);
 }
 
-// --- 3. معالجة عمليات الشراء والدفع ---
+// --- 4. معالجة عمليات الشراء والدفع ---
 async function purchaseTokenListing() {
     const finalPriceUSD = document.getElementById('ai-price-usd').innerText;
     const finalPriceEGP = document.getElementById('ai-price-egp').innerText;
@@ -69,7 +113,6 @@ async function purchaseTokenListing() {
     if (finalPriceUSD === "0.0000") return alert("يرجى تقييم العملة بالـ AI أولاً");
 
     const choice = confirm("💳 دفع دولي (Stripe)؟ \nإلغاء للدفع المحلي (Fawry/InstaPay)");
-    
     if (choice) {
         handleStripePayment(finalPriceUSD);
     } else {
@@ -78,17 +121,16 @@ async function purchaseTokenListing() {
 }
 
 function handleStripePayment(amount) {
-    console.log(🚀 Stripe Redirect: ${amount}$);
-    alert(سيتم فتح بوابة Stripe الآمنة لدفع ${amount} دولار);
+    alert(🚀 توجيه لبوابة Stripe لدفع السعر المحدث: ${amount}$);
 }
 
 function handleFawryPayment(amount) {
     const fawryRef = Math.floor(Math.random() * 1000000000);
-    alert(توجه لأقرب منفذ فوري واستخدم الرقم المرجعي: ${fawryRef} \nالمبلغ: ${amount} ج.م);
+    alert(برجاء التوجه لأقرب منفذ فوري واستخدم الرقم المرجعي: ${fawryRef} \nالمبلغ: ${amount} ج.م);
 }
 
-// --- 4. وظائف التعدين والتحكم في الأجهزة ---
-function updateMiningDisplay(minedTotal) {
+// --- 5. تحديث الواجهة والتحكم ---
+function updateMiningUI(minedTotal) {
     const allowed = ScarcityLogic.calculateAllowedHash(minedTotal);
     document.getElementById('hashRate').innerText = allowed.toFixed(8);
     document.getElementById('minedBalance').innerText = minedTotal.toFixed(8);
@@ -97,7 +139,6 @@ function updateMiningDisplay(minedTotal) {
 // تشغيل المحرك عند تحميل الصفحة
 window.onload = () => {
     console.log("EGO Chain Core: Active & Secure");
-    updateAIPricing(); // تحديث أولي للأسعار
-    // محاكاة تحديث الندرة لعملات Aura & Jewel (بيانات تجريبية)
+    initPriceChart();
     ScarcityLogic.updateMetricsUI([{asset: "AURA", tax: 150}, {asset: "JEWEL", tax: 85}]);
 };
