@@ -1,49 +1,45 @@
-// src/tokenomics-engine.js
-const MAX_SUPPLY = 100000000; // مثال: سقف العملة
-let currentSupply = 0;
+// src/tokenomics-engine.js - محرك الندرة والتعدين الذكي لشبكة EGO Chain
 
-function calculateHashRate(currentSupply) {
-    let percentage = (currentSupply / MAX_SUPPLY) * 100;
-    let baseRate = 1.0; // السرعة الأساسية
-
-    if (percentage >= 95) {
-        return 0.0000005; // أدنى سرعة عند الوصول لـ 95%
-    }
-
-    // تقليل السرعة بنسبة معينة كلما زاد التعدين 5%
-    let reductionSteps = Math.floor(percentage / 5);
-    let currentRate = baseRate * Math.pow(0.8, reductionSteps); // يقل بنسبة 20% كل خطوة
-
-    return currentRate;
-}
-
-// خاصية قفل السقف للأبد
-function lockSupplyForever() {
-    Object.freeze(MAX_SUPPLY);
-    console.log("تم قفل سقف العملة نهائياً.");
-}
-
-// src/tokenomics-engine.js
 export class ScarcityEngine {
-    constructor(maxSupply) {
-        this.maxSupply = maxSupply;
+    constructor(maxSupply = 100000000) {
+        this.MAX_SUPPLY = maxSupply;
+        this.MIN_MINING_SPEED = 0.0000005; // الحد الأدنى للسرعة عند 95%
         this.isLocked = false;
     }
 
+    /**
+     * حساب سرعة الهاش بناءً على نسبة التعدين الإجمالية
+     * القاعدة: تقل السرعة كلما زاد التعدين بنسبة 5%
+     */
     calculateCurrentHashRate(currentMined) {
-        let percentage = (currentMined / this.maxSupply) * 100;
+        let percentage = (currentMined / this.MAX_SUPPLY) * 100;
         
-        if (percentage >= 95) return 0.0000005; // أدنى سرعة طلبتها
+        // 1. الوصول للحد الأدنى المطلق عند 95% كما طلبت
+        if (percentage >= 95) {
+            return this.MIN_MINING_SPEED; 
+        }
 
-        // تقليل السرعة بنسبة 5% كلما زاد التعدين 5%
+        // 2. منطق التضيق التدريجي: تقليل السرعة كلما زاد التعدين 5%
+        let baseRate = 1.0; // السرعة الافتراضية
         let steps = Math.floor(percentage / 5);
-        let rate = 1.0 * Math.pow(0.95, steps); 
-        return rate;
+        
+        // السرعة تقل بنسبة 20% (0.😎 عند كل خطوة (Step) 5%
+        let currentRate = baseRate * Math.pow(0.8, steps); 
+
+        return currentRate;
     }
 
+    /**
+     * قفل سقف العملة للأبد ومنع أي تعديل عليه
+     */
     lockSupply() {
+        if (this.isLocked) return "تنبيه: السقف مقفل بالفعل.";
+        
         this.isLocked = true;
-        console.log("EGO Chain: تم قفل سقف العملة للأبد.");
+        // قفل الكائن برمجياً لمنع التلاعب بالقيم في الذاكرة
+        Object.freeze(this); 
+        
+        console.warn("🔒 EGO Chain: تم تفعيل قفل السقف النهائي. لا يمكن إصدار عملات إضافية.");
+        return true;
     }
 }
-،
