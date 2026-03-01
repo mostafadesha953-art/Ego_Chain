@@ -22,3 +22,28 @@ function lockSupplyForever() {
     Object.freeze(MAX_SUPPLY);
     console.log("تم قفل سقف العملة نهائياً.");
 }
+
+// src/tokenomics-engine.js
+export class ScarcityEngine {
+    constructor(maxSupply) {
+        this.maxSupply = maxSupply;
+        this.isLocked = false;
+    }
+
+    calculateCurrentHashRate(currentMined) {
+        let percentage = (currentMined / this.maxSupply) * 100;
+        
+        if (percentage >= 95) return 0.0000005; // أدنى سرعة طلبتها
+
+        // تقليل السرعة بنسبة 5% كلما زاد التعدين 5%
+        let steps = Math.floor(percentage / 5);
+        let rate = 1.0 * Math.pow(0.95, steps); 
+        return rate;
+    }
+
+    lockSupply() {
+        this.isLocked = true;
+        console.log("EGO Chain: تم قفل سقف العملة للأبد.");
+    }
+}
+،
