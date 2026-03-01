@@ -71,4 +71,18 @@ class EgoChain {
     }
 }
 
+
 module.exports = { EgoChain, Transaction };
+
+// logic for AI Pricing
+async function estimateInitialPrice(encryptionStrength, featuresCount) {
+    // محاكاة منطق AI
+    let basePrice = 0.01; // سعر مبدئي بالسنت
+    let multiplier = (encryptionStrength * 0.5) + (featuresCount * 0.2);
+    let finalPriceUSD = basePrice * multiplier;
+    
+    return {
+        usd: finalPriceUSD.toFixed(4),
+        egp: (finalPriceUSD * 50).toFixed(2) // سعر افتراضي للصرف
+    };
+}
