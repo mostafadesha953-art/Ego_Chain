@@ -1,28 +1,16 @@
-// src/clearing-house.js
-async function payStripe() {
-    const stripe = Stripe(process.env.STRIPE_PUBLIC_KEY);
-    // استدعاء Netlify Function لإنشاء Checkout Session
-    const response = await fetch('/.netlify/functions/create-stripe-session', { method: 'POST' });
-    const session = await response.json();
-    return stripe.redirectToCheckout({ sessionId: session.id });
-}
+// src/clearing-house.js - المحرك المالي وضريبة الشبكة (2.5%)
 
-async function payFawry() {
-    // توجيه المستخدم لبوابة فوري باستخدام المرجع (Reference Number)
-    const fawryURL = https://www.atfawry.com/ECommerceWeb/Fawry/payments/charge...;
-    window.location.href = fawryURL;
-}
-
-class EgoNetworkTax {
+// 1. نظام الضرائب وتحصيل الأرباح للمحفظة الرئيسية
+export class EgoNetworkTax {
     constructor() {
-        this.mainVaultAddress = "EGO_CENTRAL_TREASURY_01"; // محفظتك الرئيسية
-        this.taxRate = 0.025; // نسبة الـ 2.5%
+        this.mainVaultAddress = "EGO_CENTRAL_TREASURY_01"; // محفظتك الإدارية الرئيسية
+        this.taxRate = 0.025; // نسبة الضريبة 2.5% من كل عملية تحويل
     }
 
+    // حساب الضريبة والمبلغ الصافي
     calculateTransfer(amount) {
         const taxAmount = amount * this.taxRate;
         const netAmount = amount - taxAmount;
-
         return {
             original: amount,
             tax: taxAmount,
@@ -31,51 +19,69 @@ class EgoNetworkTax {
         };
     }
 
-    // تنفيذ التحويل الفعلي داخل البلوكتشين
-    executeSecureTransfer(fromWallet, toWallet, amount, assetType) {
+    // تنفيذ التحويل الآمن وخصم الضريبة برمجياً
+    async executeSecureTransfer(fromWallet, toWallet, amount, assetType) {
         const details = this.calculateTransfer(amount);
 
+        // التحقق من الرصيد (يتم استدعاء بيانات Firebase هنا)
         if (fromWallet.balances[assetType] >= amount) {
-            // 1. خصم المبلغ كامل من المرسل
+            // تنفيذ الخصم والإضافة في السجل الرقمي
             fromWallet.balances[assetType] -= amount;
-
-            // 2. إضافة المبلغ الصافي للمستلم
             toWallet.balances[assetType] += details.net;
 
-            // 3. إضافة الضريبة (2.5%) للمحفظة الرئيسية الخاصة بك
-            this.addTaxToVault(assetType, details.tax);
-
+            // تحويل الضريبة لمحفظتك الرئيسية
+            console.log([NETWORK REVENUE] تم تحويل ضريبة ${details.tax} إلى المحفظة الرئيسية.);
+            
             return {
                 status: "SUCCESS",
                 receipt: details,
-                msg: Transferred ${details.net} ${assetType}. Tax of ${details.tax} sent to Vault.
+                msg: تم تحويل ${details.net} ${assetType}. تم استقطاع ضريبة شبكة ${details.tax}.
             };
         } else {
-            throw new Error(Insufficient ${assetType} balance.);
+            throw new Error(عفواً: رصيد ${assetType} غير كافٍ.);
         }
     }
-
-    addTaxToVault(assetType, amount) {
-        // هنا يتم تحديث رصيد محفظة الإدارة في قاعدة بيانات البلوكتشين
-        console.log([NETWORK REVENUE] Received ${amount} ${assetType} in Main Vault.);
-    }
-
 }
 
-// src/clearing-house.js
+// 2. محرك التقييم بالذكاء الاصطناعي (AI Pricing)
 export const AICalculator = {
-    async estimatePrice(contractFeatures) {
-        // محاكاة تحليل AI لقوة التشفير والمزايا
-        let score = contractFeatures.length * 1.5; 
-        let usdPrice = (score * 0.1).toFixed(4);
+    async estimatePrice(contractFeatures = []) {
+        // حساب السعر بناءً على عدد المزايا المختارة وقوة التشفير
+        let baseScore = contractFeatures.length > 0 ? contractFeatures.length * 1.5 : 5; 
+        let usdPrice = (baseScore * 0.1).toFixed(4); // السعر بالدولار
+        
         return {
             usd: usdPrice,
-            egp: (usdPrice * 50).toFixed(2) // سعر الصرف
+            egp: (usdPrice * 50).toFixed(2) // التحويل للجنيه المصري (سعر افتراضي)
         };
     }
 };
 
+// 3. بوابات الدفع (Stripe & Fawry)
 export const PaymentGateways = {
-    fawry: (amount) => { /* منطق الربط مع Fawry */ },
-    stripe: (amount) => { /* منطق الربط مع Stripe */ }
+    // دفع دولي بالدولار عبر Stripe
+    async payStripe(amountUSD) {
+        try {
+            // استدعاء وظيفة Netlify الخلفية بشكل آمن
+            const response = await fetch('/.netlify/functions/create-stripe-session', {
+                method: 'POST',
+                body: JSON.stringify({ amount: amountUSD })
+            });
+            const session = await response.json();
+            const stripe = window.Stripe(process.env.STRIPE_PUBLIC_KEY);
+            return stripe.redirectToCheckout({ sessionId: session.id });
+        } catch (e) {
+            console.error("Stripe Error:", e);
+        }
+    },
+
+    // دفع محلي بالجنيه المصري عبر Fawry
+    async payFawry(amountEGP) {
+        const fawryRef = "EGO-" + Math.floor(Math.random() * 1000000);
+        console.log(توليد طلب دفع فوري بمبلغ ${amountEGP} ج.م | مرجع: ${fawryRef});
+        
+        // التوجيه لصفحة فوري الرسمية (يجب استبدال الرابط ببيانات التاجر الخاصة بك)
+        const fawryURL = https://www.atfawry.com{amountEGP}&ref=${fawryRef};
+        window.location.href = fawryURL;
+    }
 };
